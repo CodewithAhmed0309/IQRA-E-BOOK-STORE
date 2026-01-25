@@ -361,15 +361,25 @@
           const scale = Math.min(containerWidth / viewport.width, 2.0);
           const scaledViewport = page.getViewport({ scale });
 
-          const canvas = document.createElement('canvas');
-          const context = canvas.getContext('2d');
-          canvas.height = scaledViewport.height;
-          canvas.width = scaledViewport.width;
+        const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d');
 
-          await page.render({
-            canvasContext: context,
-            viewport: scaledViewport
-          }).promise;
+// 🔥 FIX: Handle high DPI screens
+const outputScale = window.devicePixelRatio || 1;
+
+canvas.width = Math.floor(scaledViewport.width * outputScale);
+canvas.height = Math.floor(scaledViewport.height * outputScale);
+
+canvas.style.width = `${scaledViewport.width}px`;
+canvas.style.height = `${scaledViewport.height}px`;
+
+context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
+await page.render({
+  canvasContext: context,
+  viewport: scaledViewport
+}).promise;
+
 
           pdfViewer.appendChild(canvas);
           
