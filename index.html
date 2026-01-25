@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IQRA E-STORE – Premium E-Book Library</title>
+
+<link rel="stylesheet" href="styles/main.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- Background Effects -->
+<div class="background-container">
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+  <div class="gradient-orb orb-3"></div>
+  <canvas id="particleCanvas"></canvas>
+</div>
+
+<!-- Header -->
+<header class="main-header">
+  <div class="header-container">
+    <h1 class="site-title">IQRA E-STORE</h1>
+    <p class="site-subtitle">Premium E-Book Library</p>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="main-content">
+  <section class="books-section">
+    <div class="books-grid" id="booksGrid" role="list"></div>
+  </section>
+</main>
+
+<!-- Preview Modal (Bottom Sheet) -->
+<div class="preview-modal" id="previewModal" role="dialog" aria-labelledby="preview-title" aria-modal="true">
+  <div class="modal-backdrop" data-modal="preview"></div>
+  <div class="preview-container">
+    <button class="modal-close" id="previewClose" aria-label="Close preview">✕</button>
+    <div class="preview-header">
+      <h2 id="preview-title">Preview</h2>
+      <button class="btn btn-unlock" id="unlockBook" aria-label="Unlock full book">
+        <span></span> UNLOCK BOOK
+      </button>
+    </div>
+    <div class="pdf-viewer-container">
+      <div class="pdf-viewer" id="pdfViewer" role="document" aria-label="PDF preview">
+        <div class="pdf-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading preview…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Buy Now / Payment Modal -->
+<div class="payment-modal" id="paymentModal" role="dialog" aria-labelledby="payment-title" aria-modal="true">
+  <div class="modal-backdrop" data-modal="payment"></div>
+  <div class="payment-container">
+    <button class="modal-close" id="paymentClose" aria-label="Close payment">✕</button>
+    
+    <h2 id="payment-title">Complete Payment</h2>
+    
+    <div class="payment-content">
+      <!-- QR Code Section -->
+      <div class="qr-section">
+        <img src="QR.jpg" alt="UPI QR Code" class="upi-qr" id="qrImage">
+        <p class="upi-id"><strong>UPI ID:</strong> 8639917686@nyes</p>
+      </div>
+
+      <!-- Pay Now Button -->
+      <a href="#" id="payNowBtn" class="btn btn-pay-now" aria-label="Pay now via UPI">
+         Pay Now
+      </a>
+
+      <!-- Payment Form -->
+      <form id="paymentForm" class="payment-form">
+        <div class="form-group">
+          <label for="userName" class="sr-only">Your Name</label>
+          <input 
+            type="text" 
+            id="userName" 
+            name="userName" 
+            placeholder="Your Name" 
+            required 
+            aria-label="Your name"
+            autocomplete="name"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="transactionId" class="sr-only">Transaction ID</label>
+          <input 
+            type="text" 
+            id="transactionId" 
+            name="transactionId" 
+            placeholder="Transaction ID" 
+            required 
+            aria-label="Transaction ID"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-whatsapp" aria-label="Send WhatsApp message">
+           Send WhatsApp
+        </button>
+      </form>
+
+      <p class="payment-note">
+        After verification, your full PDF will be delivered via WhatsApp.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="main-footer" role="contentinfo">
+  <p>Created with passion by <strong>Shaik Jahash Ahmed</strong></p>
+</footer>
+
+<!-- PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+</script>
+
+<!-- Application Scripts -->
+<script src="js/app.js"></script>
+
+</body>
+</html>
