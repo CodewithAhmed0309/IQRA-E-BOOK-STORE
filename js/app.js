@@ -417,11 +417,12 @@
     const uniqueNote = `${book.upiDescription} | ${Date.now()}`;
 
     const upiUrl =
-      `upi://pay?pa=${UPI_CONFIG.upiId}` +
-      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-      `&tn=${encodeURIComponent(uniqueNote)}` +
-      `&am=${amount}` +
-      `&cu=${UPI_CONFIG.currency}`;
+  `upi://pay?pa=${UPI_CONFIG.sellerNumber}` +  // <-- changed to phone number
+  `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+  `&tn=${encodeURIComponent(uniqueNote)}` +
+  `&am=${amount}` +
+  `&cu=${UPI_CONFIG.currency}`;
+
 
     // reset button state (important when modal reopens)
     payNowBtn.classList.remove('disabled');
