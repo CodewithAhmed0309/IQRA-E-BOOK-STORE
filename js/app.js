@@ -409,30 +409,24 @@
 
   const payNowBtn = document.getElementById('payNowBtn');
   if (payNowBtn) {
-    const amount = book.price || 20;
-
-    // ✅ unique transaction note
-    const uniqueNote = `${book.upiDescription} | ${Date.now()}`;
-
-    // Use correct UPI ID here
+    // Only pre-fill UPI ID and payee name
     const upiUrl =
-      `upi://pay?pa=shaikjahash@ibl` +  // <-- fixed UPI ID
-      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-      `&tn=${encodeURIComponent(uniqueNote)}` +
-      `&am=${amount}` +
-      `&cu=${UPI_CONFIG.currency}`;
+      `upi://pay?pa=${encodeURIComponent(UPI_CONFIG.upiId)}` +
+      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}`; // no amount, no note
 
-    // reset button state
     payNowBtn.classList.remove('disabled');
     payNowBtn.style.pointerEvents = 'auto';
-    payNowBtn.textContent = `💳 Pay Now ₹${amount}`;
-    payNowBtn.href = upiUrl;
+    payNowBtn.textContent = ` PAY NOW`;
 
-    // prevent multiple clicks → avoid UPI throttling
+    // Link opens UPI app
+    payNowBtn.href = upiUrl;
+    payNowBtn.target = '_blank'; // open in UPI app
+
+    // Optional: simple click feedback
     payNowBtn.onclick = () => {
       payNowBtn.classList.add('disabled');
       payNowBtn.style.pointerEvents = 'none';
-      payNowBtn.textContent = '⏳ Opening UPI App...';
+      payNowBtn.textContent = ' Opening UPI App...';
     };
   }
 
@@ -440,6 +434,7 @@
   const form = document.getElementById('paymentForm');
   if (form) form.reset();
 },
+
 
 
       /**
@@ -521,3 +516,24 @@
     // Export app for debugging
     window.app = app;
   })();
+// Select all copy buttons
+const copyButtons = document.querySelectorAll('.copyBtn');
+
+copyButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const targetId = btn.getAttribute('data-copy-target');
+    const textToCopy = document.getElementById(targetId).textContent;
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      // Show ✅ feedback
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = '✅';
+      setTimeout(() => {
+        btn.innerHTML = originalHTML; // restore SVG
+      }, 1500);
+    }).catch(() => {
+      alert('Failed to copy. Please copy manually.');
+    });
+  });
+});
+
