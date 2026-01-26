@@ -21,7 +21,7 @@
 
     // UPI Configuration
     const UPI_CONFIG = {
-      upiId: '8639917686@nyes',
+      upiId: 'shaikjahash@ibl',
       payeeName: 'Shaik Jahash Ahmed',
       sellerNumber: '8639917686', // WhatsApp number in international format
       currency: 'INR'
@@ -400,37 +400,35 @@
        * Open payment modal
        */
       openPaymentModal(book) {
-        this.currentBook = book;
-        const modal = document.getElementById('paymentModal');
-        if (!modal) return;
+  this.currentBook = book;
+  const modal = document.getElementById('paymentModal');
+  if (!modal) return;
 
-        modal.classList.add('active');
-        document.body.classList.add('modal-open');
+  modal.classList.add('active');
+  document.body.classList.add('modal-open');
 
-        // Update Pay Now button with UPI link
-      // Update Pay Now button with UPI link
   const payNowBtn = document.getElementById('payNowBtn');
   if (payNowBtn) {
     const amount = book.price || 20;
 
-    // ✅ unique transaction note to avoid UPI throttling
+    // ✅ unique transaction note
     const uniqueNote = `${book.upiDescription} | ${Date.now()}`;
 
+    // Use correct UPI ID here
     const upiUrl =
-  `upi://pay?pa=${UPI_CONFIG.sellerNumber}` +  // <-- changed to phone number
-  `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-  `&tn=${encodeURIComponent(uniqueNote)}` +
-  `&am=${amount}` +
-  `&cu=${UPI_CONFIG.currency}`;
+      `upi://pay?pa=shaikjahash@ibl` +  // <-- fixed UPI ID
+      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+      `&tn=${encodeURIComponent(uniqueNote)}` +
+      `&am=${amount}` +
+      `&cu=${UPI_CONFIG.currency}`;
 
-
-    // reset button state (important when modal reopens)
+    // reset button state
     payNowBtn.classList.remove('disabled');
     payNowBtn.style.pointerEvents = 'auto';
     payNowBtn.textContent = `💳 Pay Now ₹${amount}`;
     payNowBtn.href = upiUrl;
 
-    // ✅ prevent multiple clicks → UPI limit issue
+    // prevent multiple clicks → avoid UPI throttling
     payNowBtn.onclick = () => {
       payNowBtn.classList.add('disabled');
       payNowBtn.style.pointerEvents = 'none';
@@ -438,13 +436,11 @@
     };
   }
 
+  // Reset form
+  const form = document.getElementById('paymentForm');
+  if (form) form.reset();
+},
 
-        // Reset form
-        const form = document.getElementById('paymentForm');
-        if (form) {
-          form.reset();
-        }
-      },
 
       /**
        * Close payment modal
