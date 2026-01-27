@@ -413,10 +413,16 @@
   if (payNowBtn) {
     payNowBtn.classList.remove('disabled');
     payNowBtn.style.pointerEvents = 'auto';
-    payNowBtn.textContent = 'Open UPI App';
+    payNowBtn.textContent = 'Pay via UPI';
 
-    // 🔒 SAFE: just open UPI app selector, no data passed
-    payNowBtn.href = 'upi://';
+    const upiLink =
+      `upi://pay?pa=${UPI_CONFIG.upiId}` +
+      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+      `&am=${book.price}` +
+      `&cu=INR` +
+      `&tn=${encodeURIComponent(book.upiDescription)}`;
+
+    payNowBtn.href = upiLink;
     payNowBtn.target = '_blank';
 
     payNowBtn.onclick = () => {
@@ -426,12 +432,9 @@
     };
   }
 
-  // Reset form
   const form = document.getElementById('paymentForm');
   if (form) form.reset();
-}
-,
-
+},
 
 
       /**
@@ -832,5 +835,6 @@ copyButtons.forEach(btn => {
     yearElement.textContent = new Date().getFullYear();
   }
 })();
+document.querySelector('.payment-steps-card').style.outline = '2px solid red';
 
 
