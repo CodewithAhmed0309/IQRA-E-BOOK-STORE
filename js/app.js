@@ -13,9 +13,28 @@
         title: '<strong>Khwaab Ki Tabeer</strong>',
         coverImage: 'DP.png',
         previewPDF: 'demo.pdf',
-        price: 20,
+        oldPrice:150,
+        price: 30,
         upiDescription: 'Payment for Khwaab Ki Tabeer'
       },
+       {
+    id: 2,
+    title: '<strong>Adhura Ishq</strong>', // New Book
+    coverImage: 'ai.png',          // Replace with your new cover image
+    previewPDF: 'Part 1.pdf',
+    oldPrice:100,  // Replace with your PDF file
+    price: 29,
+    upiDescription: 'Payment for Adhura Ishq'
+  },
+  {
+    id: 3,
+    title: '<strong>The Art Of Being Alone</strong>', // New Book
+    coverImage: 'ta.jpeg',          // Replace with your new cover image
+    previewPDF: 'The preview.pdf',
+    oldPrice:450,  // Replace with your PDF file
+    price: 50,
+    upiDescription: 'Payment for The Art Of Being Alone'
+  }
       
     ];
 
@@ -32,12 +51,14 @@
       currentBook: null,
       pdfViewer: null,
 
-      init() {
-        this.initParticleCanvas();
-        this.renderBooks();
-        this.setupModals();
-        this.setupPDFViewer();
-      },
+     init() {
+  this.initParticleCanvas();
+  this.renderBooks();
+  this.setupBookActions(); // ✅ ADD THIS
+  this.setupModals();
+  this.setupPDFViewer();
+},
+
 
       /**
        * Initialize particle canvas background
@@ -157,51 +178,61 @@
         // Setup tilt hover effects
         this.setupTiltEffects();
       },
+setupBookActions() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', (e) => {
+    const button = e.target.closest('button');
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const card = button.closest('.book-card');
+    if (!action || !card) return;
+
+    const bookId = parseInt(card.dataset.bookId, 10);
+    const book = booksData.find(b => b.id === bookId);
+    if (!book) return;
+
+    if (action === 'preview') {
+      this.openPreviewModal(book);
+    }
+
+    if (action === 'buy') {
+      this.openPaymentModal(book);
+    }
+  });
+},
 
       /**
        * Create a book card element
        */
       createBookCard(book) {
-        const card = document.createElement('div');
-        card.className = 'book-card';
-        card.setAttribute('role', 'listitem');
-        card.setAttribute('data-book-id', book.id);
+  const card = document.createElement('div');
+  card.className = 'book-card';
+  card.setAttribute('role', 'listitem');
+  card.setAttribute('data-book-id', book.id);
 
-        card.innerHTML = `
-          <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
-          <div class="book-title">${book.title}</div>
-          <div class="card-actions">
-            <button class="btn btn-preview" data-action="preview" data-book-id="${book.id}" aria-label="Preview ${this.stripHtml(book.title)}">
-              Preview
-            </button>
-            <button class="btn btn-buy" data-action="buy" data-book-id="${book.id}" aria-label="Buy ${this.stripHtml(book.title)}">
-              Buy Now
-            </button>
-          </div>
-        `;
+  card.innerHTML = `
+  <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
 
-        // Add event listeners
-        const previewBtn = card.querySelector('[data-action="preview"]');
-        const buyBtn = card.querySelector('[data-action="buy"]');
+  <div class="book-title">${book.title}</div>
 
-        if (previewBtn) {
-          previewBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            this.openPreviewModal(book);
-          });
-        }
+  <div class="book-price">
+    <span class="old-price">₹${book.oldPrice}</span>
+    <span class="new-price">₹${book.price}</span>
+  </div>
 
-        if (buyBtn) {
-          buyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            this.openPaymentModal(book);
-          });
-        }
+  <div class="card-actions">
+    <button class="btn btn-preview" data-action="preview">Preview</button>
+    <button class="btn btn-buy" data-action="buy">Buy Now</button>
+  </div>
+`;
 
-        return card;
-      },
+
+  return card;
+},
+
 
       /**
        * Setup tilt hover effects on cards
@@ -452,49 +483,48 @@
        * Handle payment form submission
        */
       handlePaymentSubmit() {
-        const userNameInput = document.getElementById('userName');
-        const txnIdInput = document.getElementById('transactionId');
+  const userNameInput = document.getElementById('userName');
+  const txnIdInput = document.getElementById('transactionId');
 
-        if (!userNameInput || !txnIdInput) {
-          console.error('Form inputs not found');
-          return;
-        }
+  if (!userNameInput || !txnIdInput) return;
 
-        const userName = userNameInput.value.trim();
-        const txnId = txnIdInput.value.trim();
+  const userName = userNameInput.value.trim();
+  const txnId = txnIdInput.value.trim();
 
-        // Validation
-        if (!userName) {
-          alert('Please enter your name');
-          userNameInput.focus();
-          return;
-        }
+  if (!userName) {
+    alert('Please enter your name');
+    userNameInput.focus();
+    return;
+  }
 
-        if (!txnId) {
-          alert('Please enter your transaction ID');
-          txnIdInput.focus();
-          return;
-        }
+  if (!txnId) {
+    alert('Please enter your transaction ID');
+    txnIdInput.focus();
+    return;
+  }
 
-        if (!this.currentBook) {
-          alert('No book selected');
-          return;
-        }
+  if (!this.currentBook) {
+    alert('No book selected');
+    return;
+  }
 
-        // Create WhatsApp message
-        const bookTitle = this.stripHtml(this.currentBook.title);
-        const message = `Hello! I've made a payment for "${bookTitle}"\n\n` +
-          `Name: ${userName}\n` +
-          `Transaction ID: ${txnId}\n` +
-          `Amount: ₹${this.currentBook.price}\n\n` +
-          `Please verify and deliver the full PDF.`;
+  const bookTitle = this.stripHtml(this.currentBook.title);
+  const message = `Hello! I've made a payment for "${bookTitle}"\n\n` +
+    `Name: ${userName}\n` +
+    `Transaction ID: ${txnId}\n` +
+    `Amount: ₹${this.currentBook.price}\n\n` +
+    `Please verify and deliver the full PDF.`;
 
-        const whatsappUrl = `https://wa.me/${UPI_CONFIG.sellerNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappUrl, '_blank');
+  // Open Instagram profile for DM
+  const instagramUrl = `https://www.instagram.com/CODEWITHAHMED0309/`;
+  window.open(instagramUrl, '_blank');
 
-        // Close modal after sending
-        this.closePaymentModal();
-      },
+  // Optionally notify user
+  alert('Please send a DM on Instagram with your payment details.');
+
+  this.closePaymentModal();
+}
+,
 
       /**
        * Strip HTML tags from text
@@ -836,5 +866,6 @@ copyButtons.forEach(btn => {
   }
 })();
 document.querySelector('.payment-steps-card').style.outline = '2px solid red';
+
 
 
