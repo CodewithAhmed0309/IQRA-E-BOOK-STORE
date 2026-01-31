@@ -2523,14 +2523,33 @@ a:focus-visible {
 }
 
 .floating-card.card-2 {
-  background-image: url('../pk.jpg');
+  background-image: url('../ai.png');
   background-size: cover;
   background-position: center;
 }
 
 .floating-card.card-3 {
-  background-image: url('../ys.jpg');
+  background-image: url('../ta.jpeg');
   background-size: cover;
   background-position: center;
+}
+.book-price {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.old-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.new-price {
+  color: #d4af37;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
 
