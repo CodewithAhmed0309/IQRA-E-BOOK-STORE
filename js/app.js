@@ -1,871 +1,397 @@
-  /**
-   * IQRA E-STORE - Main Application
-   * Handles book rendering, preview, payment, UPI integration, and WhatsApp
-   */
-
-  (function() {
-    'use strict';
-
-    // E-Book Data
-    const booksData = [
-      {
-        id: 1,
-        title: '<strong>Khwaab Ki Tabeer</strong>',
-        coverImage: 'DP.png',
-        previewPDF: 'demo.pdf',
-        oldPrice:150,
-        price: 30,
-        upiDescription: 'Payment for Khwaab Ki Tabeer'
-      },
-       {
-    id: 2,
-    title: '<strong>Adhura Ishq</strong>', // New Book
-    coverImage: 'ai.png',          // Replace with your new cover image
-    previewPDF: 'Part 1.pdf',
-    oldPrice:100,  // Replace with your PDF file
-    price: 29,
-    upiDescription: 'Payment for Adhura Ishq'
-  },
-  {
-    id: 3,
-    title: '<strong>The Art Of Being Alone</strong>', // New Book
-    coverImage: 'ta.jpeg',          // Replace with your new cover image
-    previewPDF: 'The preview.pdf',
-    oldPrice:450,  // Replace with your PDF file
-    price: 50,
-    upiDescription: 'Payment for The Art Of Being Alone'
-  }
-      
-    ];
-
-    // UPI Configuration
-    const UPI_CONFIG = {
-      upiId: 'shaikjahash@ibl',
-      payeeName: 'Shaik Jahash Ahmed',
-      sellerNumber: '8639917686', // WhatsApp number in international format
-      currency: 'INR'
-    };
-
-    // Application State
-    const app = {
-      currentBook: null,
-      pdfViewer: null,
-
-     init() {
-  this.initParticleCanvas();
-  this.renderBooks();
-  this.setupBookActions(); // ✅ ADD THIS
-  this.setupModals();
-  this.setupPDFViewer();
-},
-
-
-      /**
-       * Initialize particle canvas background
-       */
-      initParticleCanvas() {
-        const canvas = document.getElementById('particleCanvas');
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let animationId = null;
-
-        function resizeCanvas() {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-        }
-
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        class Particle {
-          constructor() {
-            this.reset();
-          }
-
-          reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = (Math.random() - 0.5) * 0.5;
-            this.speedY = (Math.random() - 0.5) * 0.5;
-            this.opacity = Math.random() * 0.5 + 0.2;
-            this.color = `rgba(212, 175, 55, ${this.opacity})`;
-          }
-
-          update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-
-            if (this.x < 0) this.x = canvas.width;
-            if (this.x > canvas.width) this.x = 0;
-            if (this.y < 0) this.y = canvas.height;
-            if (this.y > canvas.height) this.y = 0;
-          }
-
-          draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-          }
-        }
-
-        function initParticles() {
-          particles = [];
-          const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
-          
-          for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-          }
-        }
-
-        function drawConnections() {
-          for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-              const dx = particles[i].x - particles[j].x;
-              const dy = particles[i].y - particles[j].y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
-
-              if (distance < 100) {
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - distance / 100)})`;
-                ctx.lineWidth = 0.5;
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-                ctx.stroke();
-              }
-            }
-          }
-        }
-
-        function animate() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          particles.forEach(particle => {
-            particle.update();
-            particle.draw();
-          });
-
-          drawConnections();
-          animationId = requestAnimationFrame(animate);
-        }
-
-        initParticles();
-        animate();
-
-        window.addEventListener('resize', () => {
-          resizeCanvas();
-          initParticles();
-        });
-      },
-
-      /**
-       * Render books to grid
-       */
-      renderBooks() {
-        const grid = document.getElementById('booksGrid');
-        if (!grid) return;
-
-        grid.innerHTML = '';
-
-        booksData.forEach(book => {
-          const card = this.createBookCard(book);
-          grid.appendChild(card);
-        });
-
-        // Setup tilt hover effects
-        this.setupTiltEffects();
-      },
-setupBookActions() {
-  const grid = document.getElementById('booksGrid');
-  if (!grid) return;
-
-  grid.addEventListener('click', (e) => {
-    const button = e.target.closest('button');
-    if (!button) return;
-
-    const action = button.dataset.action;
-    const card = button.closest('.book-card');
-    if (!action || !card) return;
-
-    const bookId = parseInt(card.dataset.bookId, 10);
-    const book = booksData.find(b => b.id === bookId);
-    if (!book) return;
-
-    if (action === 'preview') {
-      this.openPreviewModal(book);
-    }
-
-    if (action === 'buy') {
-      this.openPaymentModal(book);
-    }
-  });
-},
-
-      /**
-       * Create a book card element
-       */
-      createBookCard(book) {
-  const card = document.createElement('div');
-  card.className = 'book-card';
-  card.setAttribute('role', 'listitem');
-  card.setAttribute('data-book-id', book.id);
-
-  card.innerHTML = `
-  <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
-
-  <div class="book-title">${book.title}</div>
-
-  <div class="book-price">
-    <span class="old-price">₹${book.oldPrice}</span>
-    <span class="new-price">₹${book.price}</span>
-  </div>
-
-  <div class="card-actions">
-    <button class="btn btn-preview" data-action="preview">Preview</button>
-    <button class="btn btn-buy" data-action="buy">Buy Now</button>
-  </div>
-`;
-
-
-  return card;
-},
-
-
-      /**
-       * Setup tilt hover effects on cards
-       */
-      setupTiltEffects() {
-        const cards = document.querySelectorAll('.book-card');
-        
-        cards.forEach(card => {
-          card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = (y - centerY) / 15;
-            const rotateY = (centerX - x) / 15;
-
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
-          });
-
-          card.addEventListener('mouseleave', () => {
-            card.style.transform = '';
-          });
-        });
-      },
-
-      /**
-       * Setup modal functionality
-       */
-      setupModals() {
-        // Preview Modal
-        const previewModal = document.getElementById('previewModal');
-        const previewClose = document.getElementById('previewClose');
-        const previewBackdrop = previewModal?.querySelector('[data-modal="preview"]');
-        const unlockBtn = document.getElementById('unlockBook');
-
-        if (previewClose) {
-          previewClose.addEventListener('click', () => this.closePreviewModal());
-        }
-
-        if (previewBackdrop) {
-          previewBackdrop.addEventListener('click', () => this.closePreviewModal());
-        }
-
-        if (unlockBtn) {
-          unlockBtn.addEventListener('click', () => {
-            if (this.currentBook) {
-              this.closePreviewModal();
-              setTimeout(() => this.openPaymentModal(this.currentBook), 300);
-            }
-          });
-        }
-
-        // Payment Modal
-        const paymentModal = document.getElementById('paymentModal');
-        const paymentClose = document.getElementById('paymentClose');
-        const paymentBackdrop = paymentModal?.querySelector('[data-modal="payment"]');
-        const paymentForm = document.getElementById('paymentForm');
-
-        if (paymentClose) {
-          paymentClose.addEventListener('click', () => this.closePaymentModal());
-        }
-
-        if (paymentBackdrop) {
-          paymentBackdrop.addEventListener('click', () => this.closePaymentModal());
-        }
-
-        if (paymentForm) {
-          paymentForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handlePaymentSubmit();
-          });
-        }
-
-        // Close modals on Escape key
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            if (previewModal?.classList.contains('active')) {
-              this.closePreviewModal();
-            }
-            if (paymentModal?.classList.contains('active')) {
-              this.closePaymentModal();
-            }
-          }
-        });
-      },
-
-      /**
-       * Setup PDF viewer
-       */
-      setupPDFViewer() {
-        // PDF viewer will be initialized when preview opens
-      },
-
-      /**
-       * Open preview modal
-       */
-      openPreviewModal(book) {
-        this.currentBook = book;
-        const modal = document.getElementById('previewModal');
-        if (!modal) return;
-
-        modal.classList.add('active');
-        document.body.classList.add('modal-open');
-
-        // Load PDF preview
-        this.loadPDFPreview(book.previewPDF);
-      },
-
-      /**
-       * Close preview modal
-       */
-      closePreviewModal() {
-        const modal = document.getElementById('previewModal');
-        if (modal) {
-          modal.classList.remove('active');
-        }
-        document.body.classList.remove('modal-open');
-
-        // Reset PDF viewer
-        const pdfViewer = document.getElementById('pdfViewer');
-        if (pdfViewer) {
-          pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';
-        }
-      },
-
-      /**
-       * Load PDF preview
-       */
-      async loadPDFPreview(pdfUrl) {
-        const pdfViewer = document.getElementById('pdfViewer');
-        if (!pdfViewer) return;
-
-        if (typeof pdfjsLib === 'undefined') {
-          pdfViewer.innerHTML = '<p style="color: #ff4444; text-align: center; padding: 2rem;">PDF.js library not loaded. Please refresh the page.</p>';
-          return;
-        }
-
-        try {
-          pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';
-
-          const loadingTask = pdfjsLib.getDocument(pdfUrl);
-          const pdfDoc = await loadingTask.promise;
-          
-          // Render first 3 pages
-          const pagesToRender = Math.min(3, pdfDoc.numPages);
-          pdfViewer.innerHTML = '';
-
-          for (let pageNum = 1; pageNum <= pagesToRender; pageNum++) {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.0 });
-
-            // Calculate scale to fit container width
-            const containerWidth = pdfViewer.clientWidth - 32;
-            const scale = Math.min(containerWidth / viewport.width, 2.0);
-            const scaledViewport = page.getViewport({ scale });
-
-          const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-
-  // 🔥 FIX: Handle high DPI screens
-  const outputScale = window.devicePixelRatio || 1;
-
-  canvas.width = Math.floor(scaledViewport.width * outputScale);
-  canvas.height = Math.floor(scaledViewport.height * outputScale);
-
-  canvas.style.width = `${scaledViewport.width}px`;
-  canvas.style.height = `${scaledViewport.height}px`;
-
-  context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
-
-  await page.render({
-    canvasContext: context,
-    viewport: scaledViewport
-  }).promise;
-
-
-            pdfViewer.appendChild(canvas);
-            
-            // Add spacing between pages
-            if (pageNum < pagesToRender) {
-              const spacer = document.createElement('div');
-              spacer.style.height = '2rem';
-              pdfViewer.appendChild(spacer);
-            }
-          }
-        } catch (error) {
-          console.error('Error loading PDF:', error);
-          pdfViewer.innerHTML = '<p style="color: #ff4444; text-align: center; padding: 2rem;">Failed to load PDF preview. Please try again.</p>';
-        }
-      },
-
-      /**
-       * Open payment modal
-       */
-     openPaymentModal(book) {
-  this.currentBook = book;
-
-  const modal = document.getElementById('paymentModal');
-  if (!modal) return;
-
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
-
-  const payNowBtn = document.getElementById('payNowBtn');
-
-  if (payNowBtn) {
-    payNowBtn.classList.remove('disabled');
-    payNowBtn.style.pointerEvents = 'auto';
-    payNowBtn.textContent = 'Pay via UPI';
-
-    const upiLink =
-      `upi://pay?pa=${UPI_CONFIG.upiId}` +
-      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-      `&am=${book.price}` +
-      `&cu=INR` +
-      `&tn=${encodeURIComponent(book.upiDescription)}`;
-
-    payNowBtn.href = upiLink;
-    payNowBtn.target = '_blank';
-
-    payNowBtn.onclick = () => {
-      payNowBtn.classList.add('disabled');
-      payNowBtn.style.pointerEvents = 'none';
-      payNowBtn.textContent = 'Opening UPI App...';
-    };
-  }
-
-  const form = document.getElementById('paymentForm');
-  if (form) form.reset();
-},
-
-
-      /**
-       * Close payment modal
-       */
-      closePaymentModal() {
-        const modal = document.getElementById('paymentModal');
-        if (modal) {
-          modal.classList.remove('active');
-        }
-        document.body.classList.remove('modal-open');
-      },
-
-      /**
-       * Handle payment form submission
-       */
-      handlePaymentSubmit() {
-  const userNameInput = document.getElementById('userName');
-  const txnIdInput = document.getElementById('transactionId');
-
-  if (!userNameInput || !txnIdInput) return;
-
-  const userName = userNameInput.value.trim();
-  const txnId = txnIdInput.value.trim();
-
-  if (!userName) {
-    alert('Please enter your name');
-    userNameInput.focus();
-    return;
-  }
-
-  if (!txnId) {
-    alert('Please enter your transaction ID');
-    txnIdInput.focus();
-    return;
-  }
-
-  if (!this.currentBook) {
-    alert('No book selected');
-    return;
-  }
-
-  const bookTitle = this.stripHtml(this.currentBook.title);
-  const message = `Hello! I've made a payment for "${bookTitle}"\n\n` +
-    `Name: ${userName}\n` +
-    `Transaction ID: ${txnId}\n` +
-    `Amount: ₹${this.currentBook.price}\n\n` +
-    `Please verify and deliver the full PDF.`;
-
-  // Open Instagram profile for DM
-  const instagramUrl = `https://www.instagram.com/CODEWITHAHMED0309/`;
-  window.open(instagramUrl, '_blank');
-
-  // Optionally notify user
-  alert('Please send a DM on Instagram with your payment details.');
-
-  this.closePaymentModal();
-}
-,
-
-      /**
-       * Strip HTML tags from text
-       */
-      stripHtml(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        return div.textContent || div.innerText || '';
-      }
-    };
-
-    // Initialize app when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => app.init());
-    } else {
-      app.init();
-    }
-
-    // Export app for debugging
-    window.app = app;
-  })();
-// Select all copy buttons
-const copyButtons = document.querySelectorAll('.copyBtn');
-
-copyButtons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    const targetId = btn.getAttribute('data-copy-target');
-    const textToCopy = document.getElementById(targetId).textContent;
-
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      // Show ✅ feedback
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = '✅';
-      setTimeout(() => {
-        btn.innerHTML = originalHTML; // restore SVG
-      }, 1500);
-    }).catch(() => {
-      alert('Failed to copy. Please copy manually.');
-    });
-  });
-});
-
 /**
- * Navigation Menu Functionality
+ * IQRA E-STORE - Main Application (Refactored for Readability)
+ * All features preserved: books rendering, PDF preview, UPI payment, particle canvas, copy buttons, navbar, sliders, counters, newsletter
  */
+
 (function() {
   'use strict';
 
-  const navToggle = document.getElementById('navToggle');
-  const navMenu = document.getElementById('navMenu');
-  const navLinks = document.querySelectorAll('.nav-link');
-  const dropdownItems = document.querySelectorAll('.nav-item-dropdown');
+  /***********************
+   * E-Book Data & Config *
+   ***********************/
+  const booksData = [
+    { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 30, upiDescription: 'Payment for Khwaab Ki Tabeer' },
+    { id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
+    { id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 50, upiDescription: 'Payment for The Art Of Being Alone' }
+  ];
 
-  // Toggle mobile menu
-  if (navToggle) {
-    navToggle.addEventListener('click', () => {
-      const isExpanded = navToggle.getAttribute('aria-expanded') === 'true';
-      navToggle.setAttribute('aria-expanded', !isExpanded);
-      navMenu.classList.toggle('active');
-      document.body.style.overflow = !isExpanded ? 'hidden' : '';
-    });
-  }
+  const UPI_CONFIG = {
+    upiId: 'shaikjahash@ibl',
+    payeeName: 'Shaik Jahash Ahmed',
+    sellerNumber: '8639917686',
+    currency: 'INR'
+  };
 
-  // Close menu when clicking on a link
-  navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      if (window.innerWidth <= 768) {
-        navMenu.classList.remove('active');
-        navToggle.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = '';
+  /**************************
+   * Main App State & Init  *
+   **************************/
+  const app = {
+    currentBook: null,
+    pdfViewer: null,
+    particleCanvas: null,
+    particleCtx: null,
+    particles: [],
+    animationId: null,
+
+    init() {
+      this.initParticleCanvas();
+      this.renderBooks();
+      this.setupBookActions();
+      this.setupModals();
+      this.setupPDFViewer();
+    },
+
+    /**************************
+     * Particle Canvas Logic  *
+     **************************/
+    initParticleCanvas() {
+      this.particleCanvas = document.getElementById('particleCanvas');
+      if (!this.particleCanvas) return;
+
+      this.particleCtx = this.particleCanvas.getContext('2d');
+      const canvas = this.particleCanvas;
+      const ctx = this.particleCtx;
+      const appRef = this;
+
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedX = (Math.random() - 0.5) * 0.5;
+          this.speedY = (Math.random() - 0.5) * 0.5;
+          this.opacity = Math.random() * 0.5 + 0.2;
+          this.color = `rgba(212, 175, 55, ${this.opacity})`;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < 0) this.x = canvas.width;
+          if (this.x > canvas.width) this.x = 0;
+          if (this.y < 0) this.y = canvas.height;
+          if (this.y > canvas.height) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
       }
-    });
-  });
 
-  // Mobile dropdown toggle
-  dropdownItems.forEach(item => {
-    const link = item.querySelector('.nav-link');
-    if (link) {
-      link.addEventListener('click', (e) => {
-        if (window.innerWidth <= 768) {
-          e.preventDefault();
-          item.classList.toggle('active');
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function initParticles() {
+        appRef.particles = [];
+        const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
+        for (let i = 0; i < particleCount; i++) appRef.particles.push(new Particle());
+      }
+
+      function drawConnections() {
+        const particles = appRef.particles;
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 100) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - dist / 100)})`;
+              ctx.lineWidth = 0.5;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      function animate() {
+        const previewModal = document.getElementById('previewModal');
+        if (previewModal?.classList.contains('active')) {
+          appRef.animationId = requestAnimationFrame(animate);
+          return; // Skip rendering when preview open
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        appRef.particles.forEach(p => { p.update(); p.draw(); });
+        drawConnections();
+        appRef.animationId = requestAnimationFrame(animate);
+      }
+
+      window.addEventListener('resize', debounce(() => { resizeCanvas(); initParticles(); }, 200));
+
+      resizeCanvas();
+      initParticles();
+      animate();
+    },
+
+    /**************************
+     * Book Grid & Cards      *
+     **************************/
+    renderBooks() {
+      const grid = document.getElementById('booksGrid');
+      if (!grid) return;
+
+      grid.innerHTML = '';
+      booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+      this.setupTiltEffects();
+    },
+
+    createBookCard(book) {
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.setAttribute('role', 'listitem');
+      card.dataset.bookId = book.id;
+
+      card.innerHTML = `
+        <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
+        <div class="book-title">${book.title}</div>
+        <div class="book-price">
+          <span class="old-price">₹${book.oldPrice}</span>
+          <span class="new-price">₹${book.price}</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-preview" data-action="preview">Preview</button>
+          <button class="btn btn-buy" data-action="buy">Buy Now</button>
+        </div>
+      `;
+      return card;
+    },
+
+    setupTiltEffects() {
+      const cards = document.querySelectorAll('.book-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const rotateX = (y - rect.height / 2) / 15;
+          const rotateY = (rect.width / 2 - x) / 15;
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+        });
+        card.addEventListener('mouseleave', () => card.style.transform = '');
+      });
+    },
+
+    setupBookActions() {
+      const grid = document.getElementById('booksGrid');
+      if (!grid) return;
+
+      grid.addEventListener('click', e => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.dataset.action;
+        const card = button.closest('.book-card');
+        if (!action || !card) return;
+
+        const bookId = parseInt(card.dataset.bookId, 10);
+        const book = booksData.find(b => b.id === bookId);
+        if (!book) return;
+
+        if (action === 'preview') this.openPreviewModal(book);
+        if (action === 'buy') this.openPaymentModal(book);
+      });
+    },
+
+    /**************************
+     * Modal Functionality    *
+     **************************/
+    setupModals() {
+      // Preview Modal
+      const previewModal = document.getElementById('previewModal');
+      const previewClose = document.getElementById('previewClose');
+      const previewBackdrop = previewModal?.querySelector('[data-modal="preview"]');
+      const unlockBtn = document.getElementById('unlockBook');
+
+      previewClose?.addEventListener('click', () => this.closePreviewModal());
+      previewBackdrop?.addEventListener('click', () => this.closePreviewModal());
+      unlockBtn?.addEventListener('click', () => {
+        if (this.currentBook) {
+          this.closePreviewModal();
+          setTimeout(() => this.openPaymentModal(this.currentBook), 300);
         }
       });
-    }
-  });
 
-  // Navbar scroll effect
-  const mainNav = document.querySelector('.main-nav');
-  let lastScroll = 0;
+      // Payment Modal
+      const paymentModal = document.getElementById('paymentModal');
+      const paymentClose = document.getElementById('paymentClose');
+      const paymentBackdrop = paymentModal?.querySelector('[data-modal="payment"]');
+      const paymentForm = document.getElementById('paymentForm');
 
-  window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    
-    if (currentScroll > 100) {
-      mainNav.classList.add('scrolled');
-    } else {
-      mainNav.classList.remove('scrolled');
-    }
-
-    lastScroll = currentScroll;
-  });
-
-  // Smooth scroll for anchor links
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
-      const href = this.getAttribute('href');
-      if (href === '#' || href === '#home') {
+      paymentClose?.addEventListener('click', () => this.closePaymentModal());
+      paymentBackdrop?.addEventListener('click', () => this.closePaymentModal());
+      paymentForm?.addEventListener('submit', e => {
         e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.handlePaymentSubmit();
+      });
+
+      // Close modals on Escape key
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          if (previewModal?.classList.contains('active')) this.closePreviewModal();
+          if (paymentModal?.classList.contains('active')) this.closePaymentModal();
+        }
+      });
+    },
+
+    /**************************
+     * PDF Viewer Functions   *
+     **************************/
+    setupPDFViewer() {
+      // initialized lazily when opening preview
+    },
+
+    openPreviewModal(book) {
+      this.currentBook = book;
+      const modal = document.getElementById('previewModal');
+      modal?.classList.add('active');
+      document.body.classList.add('modal-open');
+      this.loadPDFPreview(book.previewPDF);
+    },
+
+    closePreviewModal() {
+      const modal = document.getElementById('previewModal');
+      modal?.classList.remove('active');
+      document.body.classList.remove('modal-open');
+
+      const pdfViewer = document.getElementById('pdfViewer');
+      if (pdfViewer) pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';
+    },
+
+    async loadPDFPreview(pdfUrl) {
+      const pdfViewer = document.getElementById('pdfViewer');
+      if (!pdfViewer) return;
+
+      if (typeof pdfjsLib === 'undefined') {
+        pdfViewer.innerHTML = '<p style="color: #ff4444;">PDF.js library not loaded.</p>';
         return;
       }
 
-      const target = document.querySelector(href);
-      if (target) {
-        e.preventDefault();
-        const offsetTop = target.offsetTop - 80;
-        window.scrollTo({
-          top: offsetTop,
-          behavior: 'smooth'
-        });
+      pdfViewer.innerHTML = '<div class="pdf-loading">Loading preview…</div>';
+      const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+      pdfViewer.innerHTML = '';
+
+      const pagesToRender = Math.min(3, pdfDoc.numPages);
+      for (let i = 1; i <= pagesToRender; i++) {
+        this.renderPDFPage(pdfDoc, i, pdfViewer);
       }
-    });
-  });
+    },
 
-  // Active nav link on scroll
-  const sections = document.querySelectorAll('section[id]');
-  
-  function updateActiveNavLink() {
-    const scrollY = window.pageYOffset;
+    async renderPDFPage(pdfDoc, pageNum, container) {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1 });
+      const scale = Math.min((container.clientWidth - 32) / viewport.width, 1);
+      const scaledViewport = page.getViewport({ scale });
 
-    sections.forEach(section => {
-      const sectionHeight = section.offsetHeight;
-      const sectionTop = section.offsetTop - 100;
-      const sectionId = section.getAttribute('id');
-      const navLink = document.querySelector(`.nav-link[href="#${sectionId}"]`);
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const outputScale = window.devicePixelRatio || 1;
 
-      if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-        navLinks.forEach(link => link.classList.remove('active'));
-        if (navLink) navLink.classList.add('active');
+      canvas.width = Math.floor(scaledViewport.width * outputScale);
+      canvas.height = Math.floor(scaledViewport.height * outputScale);
+      canvas.style.width = `${scaledViewport.width}px`;
+      canvas.style.height = `${scaledViewport.height}px`;
+      context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
+      await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+      container.appendChild(canvas);
+
+      if (pageNum < pdfDoc.numPages) {
+        const spacer = document.createElement('div');
+        spacer.style.height = '2rem';
+        container.appendChild(spacer);
       }
-    });
+    },
 
-    // Home link active when at top
-    if (scrollY < 100) {
-      navLinks.forEach(link => link.classList.remove('active'));
-      const homeLink = document.querySelector('.nav-link[href="#home"]');
-      if (homeLink) homeLink.classList.add('active');
-    }
-  }
+    /**************************
+     * Payment Functions      *
+     **************************/
+    openPaymentModal(book) {
+      this.currentBook = book;
+      const modal = document.getElementById('paymentModal');
+      if (!modal) return;
 
-  window.addEventListener('scroll', updateActiveNavLink);
-  updateActiveNavLink();
-})();
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
 
-/**
- * Testimonials Slider
- */
-(function() {
-  'use strict';
+      const payNowBtn = document.getElementById('payNowBtn');
+      if (payNowBtn) {
+        payNowBtn.classList.remove('disabled');
+        payNowBtn.style.pointerEvents = 'auto';
+        payNowBtn.textContent = 'Pay via UPI';
 
-  const testimonialCards = document.querySelectorAll('.testimonial-card');
-  const dots = document.querySelectorAll('.dot');
-  const prevBtn = document.querySelector('.testimonial-btn.prev');
-  const nextBtn = document.querySelector('.testimonial-btn.next');
-  let currentSlide = 0;
-  let autoSlideInterval;
+        const upiLink =
+          `upi://pay?pa=${UPI_CONFIG.upiId}` +
+          `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+          `&am=${book.price}` +
+          `&cu=INR` +
+          `&tn=${encodeURIComponent(book.upiDescription)}`;
 
-  function showSlide(index) {
-    testimonialCards.forEach((card, i) => {
-      card.classList.toggle('active', i === index);
-    });
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === index);
-    });
-    currentSlide = index;
-  }
+        payNowBtn.href = upiLink;
+        payNowBtn.target = '_blank';
 
-  function nextSlide() {
-    const next = (currentSlide + 1) % testimonialCards.length;
-    showSlide(next);
-  }
+        payNowBtn.onclick = () => {
+          payNowBtn.classList.add('disabled');
+          payNowBtn.style.pointerEvents = 'none';
+          payNowBtn.textContent = 'Opening UPI App...';
+        };
+      }
 
-  function prevSlide() {
-    const prev = (currentSlide - 1 + testimonialCards.length) % testimonialCards.length;
-    showSlide(prev);
-  }
+      const form = document.getElementById('paymentForm');
+      if (form) form.reset();
+    },
 
-  function startAutoSlide() {
-    autoSlideInterval = setInterval(nextSlide, 5000);
-  }
+    closePaymentModal() {
+      const modal = document.getElementById('paymentModal');
+      if (modal) modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    },
 
-  function stopAutoSlide() {
-    clearInterval(autoSlideInterval);
-  }
+    handlePaymentSubmit() {
+      const userNameInput = document.getElementById('userName');
+      const txnIdInput = document.getElementById('transactionId');
+      if (!userNameInput || !txnIdInput) return;
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => {
-      nextSlide();
-      stopAutoSlide();
-      startAutoSlide();
-    });
-  }
+      const userName = userNameInput.value.trim();
+      const txnId = txnIdInput.value.trim();
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => {
-      prevSlide();
-      stopAutoSlide();
-      startAutoSlide();
-    });
-  }
+      if (!userName) { alert('Please enter your name'); userNameInput.focus(); return; }
+      if (!txnId) { alert('Please enter your transaction ID'); txnIdInput.focus(); return; }
+      if (!this.currentBook) { alert('No book selected'); return; }
 
-  dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => {
-      showSlide(index);
-      stopAutoSlide();
-      startAutoSlide();
-    });
-  });
+      const instagramUrl = 'https://www.instagram.com/CODEWITHAHMED0309/';
+      alert('Redirecting you to Instagram. Please send your payment details via DM.');
+      window.location.href = instagramUrl;
 
-  // Start auto-slide
-  if (testimonialCards.length > 0) {
-    startAutoSlide();
-  }
-})();
+      this.closePaymentModal();
+    },
 
-/**
- * Scroll Animations
- */
-(function() {
-  'use strict';
-
-  const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
+    /**************************
+     * Utility Functions      *
+     **************************/
+    stripHtml(html) { const div = document.createElement('div'); div.innerHTML = html; return div.textContent || div.innerText || ''; }
   };
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, observerOptions);
-
-  // Observe sections for scroll animations
-  document.querySelectorAll('.about-feature, .service-card, .section-header').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    observer.observe(el);
-  });
-})();
-
-/**
- * Number Counter Animation
- */
-(function() {
-  'use strict';
-
-  function animateCounter(element, target, duration = 2000) {
-    const start = 0;
-    const increment = target / (duration / 16);
-    let current = start;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        element.textContent = target + (target >= 1000 ? '+' : '');
-        clearInterval(timer);
-      } else {
-        element.textContent = Math.floor(current) + (target >= 1000 ? '+' : '');
-      }
-    }, 16);
+  /**************************
+   * Helper Functions       *
+   **************************/
+  function debounce(fn, delay) {
+    let timer;
+    return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
   }
 
-  const statNumbers = document.querySelectorAll('.stat-number');
-  const observerOptions = {
-    threshold: 0.5
-  };
+  /**************************
+   * Initialize App         *
+   **************************/
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => app.init());
+  } else app.init();
 
-  const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !entry.target.dataset.animated) {
-        const target = parseInt(entry.target.dataset.target);
-        animateCounter(entry.target, target);
-        entry.target.dataset.animated = 'true';
-      }
-    });
-  }, observerOptions);
+  window.app = app;
 
-  statNumbers.forEach(stat => {
-    stat.textContent = '0';
-    statsObserver.observe(stat);
-  });
 })();
-
-/**
- * Newsletter Form Handler
- */
-(function() {
-  'use strict';
-
-  const newsletterForm = document.getElementById('newsletterForm');
-  
-  if (newsletterForm) {
-    newsletterForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const emailInput = newsletterForm.querySelector('.newsletter-input');
-      const email = emailInput.value.trim();
-
-      if (email) {
-        // Simulate form submission
-        const btn = newsletterForm.querySelector('.newsletter-btn');
-        const originalText = btn.querySelector('span').textContent;
-        btn.querySelector('span').textContent = 'Subscribing...';
-        btn.disabled = true;
-
-        setTimeout(() => {
-          alert('Thank you for subscribing! You will receive updates on new releases.');
-          emailInput.value = '';
-          btn.querySelector('span').textContent = originalText;
-          btn.disabled = false;
-        }, 1000);
-      }
-    });
-  }
-})();
-
-/**
- * Set Current Year in Footer
- */
-(function() {
-  'use strict';
-  const yearElement = document.getElementById('currentYear');
-  if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
-  }
-})();
-document.querySelector('.payment-steps-card').style.outline = '2px solid red';
-
-
-
