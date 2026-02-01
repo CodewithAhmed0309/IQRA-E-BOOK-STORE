@@ -364,7 +364,7 @@
       if (!txnId) { alert('Please enter your transaction ID'); txnIdInput.focus(); return; }
       if (!this.currentBook) { alert('No book selected'); return; }
 
-      const instagramUrl = 'https://www.instagram.com/CODEWITHAHMED0309/';
+      const instagramUrl = 'https://www.instagram.com/codewithahmed_0309/';
       alert('Redirecting you to Instagram. Please send your payment details via DM.');
       window.location.href = instagramUrl;
 
