@@ -162,7 +162,7 @@
       </div>
       <div class="step-row">
         <div class="step-number">4</div>
-        <div class="step-text">Tap <strong>WhatsApp</strong> to get your book.</div>
+        <div class="step-text">Tap <strong>SEND</strong> to get your book.</div>
       </div>
     </div>
     <button class="modal-close" id="paymentClose" aria-label="Close payment">✕</button>
@@ -206,39 +206,35 @@
         </div>
       </div>
 
-      <!-- Pay Now Button -->
       
-      <!-- Payment Form -->
-      <form id="paymentForm" class="payment-form">
-        <div class="form-group">
-          <label for="userName" class="sr-only">Your Name</label>
-          <input 
-            type="text" 
-            id="userName" 
-            name="userName" 
-            placeholder="Your Name" 
-            required 
-            aria-label="Your name"
-            autocomplete="name"
-          >
-        </div>
-        
-        <div class="form-group">
-          <label for="transactionId" class="sr-only">Transaction ID</label>
-          <input 
-            type="text" 
-            id="transactionId" 
-            name="transactionId" 
-            placeholder="Transaction ID" 
-            required 
-            aria-label="Transaction ID"
-          >
-        </div>
 
-        <button type="submit" class="btn btn-whatsapp" aria-label="Send WhatsApp message">
-           Send WhatsApp
-        </button>
-      </form>
+      <!-- Payment Form -->
+      <form id="paymentForm">
+  <input
+    type="text"
+    id="userName"
+    placeholder="Enter Your Full Name"
+    required
+    style="width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;"
+  >
+
+  <input
+    type="text"
+    id="transactionId"
+    placeholder="Paste Transaction ID Here"
+    required
+    style="width: 100%; padding: 12px; margin-bottom: 15px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;"
+  >
+
+  <button
+    type="submit"
+    id="sendBtn"
+    style="width: 100%; padding: 14px; background: #d4af37;border: 2PX solid black; color: white; border: none; border-radius: 28px; font-weight: 700; cursor: pointer;"
+  >
+    SEND
+  </button>
+</form>
+
 
       <p class="payment-note">
         After verification, your full PDF will be delivered via WhatsApp.
@@ -254,7 +250,7 @@
       <!-- Footer Brand -->
       <div class="footer-column footer-brand">
         <div class="footer-logo">
-          <span class="brand-icon">📚</span>
+          <span class="brand-icon"></span>
           <span class="brand-text">IQRA E-STORE</span>
         </div>
         <p class="footer-description">
@@ -375,5 +371,4 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 </body>
 </html>
-
 
