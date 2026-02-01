@@ -352,24 +352,69 @@
       document.body.classList.remove('modal-open');
     },
 
-    handlePaymentSubmit() {
-      const userNameInput = document.getElementById('userName');
-      const txnIdInput = document.getElementById('transactionId');
-      if (!userNameInput || !txnIdInput) return;
+  handlePaymentSubmit() {
+  const nameInput = document.getElementById('userName');
+  const txnInput = document.getElementById('transactionId');
 
-      const userName = userNameInput.value.trim();
-      const txnId = txnIdInput.value.trim();
+  if (!nameInput || !txnInput) {
+    alert('Form error. Please reload the page.');
+    return;
+  }
 
-      if (!userName) { alert('Please enter your name'); userNameInput.focus(); return; }
-      if (!txnId) { alert('Please enter your transaction ID'); txnIdInput.focus(); return; }
-      if (!this.currentBook) { alert('No book selected'); return; }
+  const name = nameInput.value.trim();
+  const txnId = txnInput.value.trim();
 
-      const instagramUrl = 'https://www.instagram.com/codewithahmed_0309/';
-      alert('Redirecting you to Instagram. Please send your payment details via DM.');
-      window.location.href = instagramUrl;
+  if (!name) {
+    alert('Please enter your name');
+    nameInput.focus();
+    return;
+  }
 
-      this.closePaymentModal();
-    },
+  if (!txnId) {
+    alert('Please enter your transaction ID');
+    txnInput.focus();
+    return;
+  }
+
+  if (!this.currentBook) {
+    alert('No book selected');
+    return;
+  }
+
+  // Create message
+  const message =
+`Hi, I paid for "${this.currentBook.title.replace(/<[^>]*>/g, '')}".
+Name: ${name}
+Txn ID: ${txnId}`;
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(message).then(() => {
+    alert(
+      'Payment noted!\n\n' +
+      'Message copied.\n' +
+      'Instagram will open now.\n\n' +
+      'Tap "Message" → Paste → Send'
+    );
+
+    const instaUsername = 'codewithahmed_0309';
+    const instaAppUrl = `instagram://user?username=${instaUsername}`;
+    const instaWebUrl = `https://www.instagram.com/${instaUsername}/`;
+
+    // Try opening app
+    window.location.href = instaAppUrl;
+
+    // Fallback to browser
+    setTimeout(() => {
+      window.open(instaWebUrl, '_blank');
+    }, 700);
+
+    this.closePaymentModal();
+  }).catch(() => {
+    alert('Unable to copy message. Please copy manually.');
+  });
+}
+,
+
 
     /**************************
      * Utility Functions      *
