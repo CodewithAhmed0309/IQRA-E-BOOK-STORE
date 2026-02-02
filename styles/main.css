@@ -2924,3 +2924,85 @@ input:focus {
     transform: none;
   }
 }
+.bundle-card {
+  border: 2px dashed #d4af37;
+  padding: 1rem;
+  background: rgba(0,0,0,0.6);
+  text-align: center;
+  margin-bottom: 2rem; /* space between bundle and books */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centers header and images */
+  justify-content: center;
+}
+
+.bundle-card .bundle-covers {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.bundle-card .bundle-covers img {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border: 1px solid #fff;
+  border-radius: 4px;
+}
+.bundle-card {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 2rem auto; /* horizontally centered */
+}
+.bundle-card {
+  border: 2px dashed #d4af37;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.bundle-card .bundle-header h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.bundle-card .bundle-header p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.bundle-card .bundle-covers {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap; /* makes images wrap on small screens */
+}
+
+.bundle-card .bundle-covers img {
+  width: 100px;   /* bigger size */
+  height: 150px;  /* proportional to book covers */
+  object-fit: cover;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  transition: transform 0.3s;
+}
+
+.bundle-card .bundle-covers img:hover {
+  transform: scale(1.1); /* subtle zoom on hover */
+}
+
+.bundle-card .card-actions {
+  margin-top: 1rem;
+}
+.bundle-card .bundle-price {
+  color: #ffd700; /* gold color */
+  font-weight: 600;
+}
+
