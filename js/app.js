@@ -10,9 +10,10 @@
    * E-Book Data & Config *
    ***********************/
   const booksData = [
-    { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 30, upiDescription: 'Payment for Khwaab Ki Tabeer' },
+    { id: 4, title: '<strong>Makaan No. 27 Shadows of the Forgotten</strong>', coverImage: 'F.png', previewPDF: 'PD.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Makaan No. 27' },
     { id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
-    { id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 50, upiDescription: 'Payment for The Art Of Being Alone' }
+    { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Khwaab Ki Tabeer' },
+    { id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 49, upiDescription: 'Payment for The Art Of Being Alone' }
   ];
 
   const UPI_CONFIG = {
@@ -40,6 +41,7 @@
       this.setupModals();
       this.setupPDFViewer();
     },
+
 
     /**************************
      * Particle Canvas Logic  *
@@ -415,6 +417,92 @@ Txn ID: ${txnId}`;
 }
 ,
 
+createBundleCard() {
+  const card = document.createElement('div');
+  card.className = 'book-card bundle-card';
+  card.setAttribute('role', 'listitem');
+  card.dataset.bookId = 'bundle'; // special id for bundle
+
+  // Inner HTML with price
+  card.innerHTML = `
+    <div class="bundle-header">
+      <h3>🎉 Special Bundle Offer!</h3>
+      <p>Get all 4 books for only <strong>₹99</strong></p>
+    </div>
+    <div class="bundle-covers">
+      ${booksData.map(book => `<img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">`).join('')}
+    </div>
+    <div class="bundle-price" style="font-size: 1.2rem; font-weight: bold; margin: 0.5rem 0;">₹99</div>
+    <div class="card-actions">
+      <button class="btn btn-buy" data-action="buy-bundle">BUY BUNDLE</button>
+    </div>
+  `;
+
+  return card;
+}
+,
+renderBooks() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  // Render individual books
+  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+
+  // Render the bundle card at the top (or bottom)
+  grid.appendChild(this.createBundleCard());
+
+  this.setupTiltEffects();
+},
+setupBookActions() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    const action = button.dataset.action;
+    const card = button.closest('.book-card');
+    if (!action || !card) return;
+
+    if (action === 'preview') {
+      const bookId = parseInt(card.dataset.bookId, 10);
+      const book = booksData.find(b => b.id === bookId);
+      if (book) this.openPreviewModal(book);
+    }
+
+    if (action === 'buy') {
+      const bookId = parseInt(card.dataset.bookId, 10);
+      const book = booksData.find(b => b.id === bookId);
+      if (book) this.openPaymentModal(book);
+    }
+
+    if (action === 'buy-bundle') {
+      // Create a pseudo-book object for bundle
+      const bundleBook = {
+        title: 'Bundle of 4 Books',
+        price: 99,
+        upiDescription: 'Payment for Bundle of 4 Books'
+      };
+      this.openPaymentModal(bundleBook);
+    }
+  });
+},
+renderBooks() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  // Render the bundle card first
+  grid.appendChild(this.createBundleCard());
+
+  // Then render individual books
+  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+
+  this.setupTiltEffects();
+},
 
     /**************************
      * Utility Functions      *
