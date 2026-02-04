@@ -314,39 +314,39 @@
      * Payment Functions      *
      **************************/
     openPaymentModal(book) {
-  this.currentBook = book;
+      this.currentBook = book;
+      const modal = document.getElementById('paymentModal');
+      if (!modal) return;
 
-  const modal = document.getElementById('paymentModal');
-  if (!modal) return;
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
 
-  modal.classList.add('active');
-  document.body.classList.add('modal-open');
+      const payNowBtn = document.getElementById('payNowBtn');
+      if (payNowBtn) {
+        payNowBtn.classList.remove('disabled');
+        payNowBtn.style.pointerEvents = 'auto';
+        payNowBtn.textContent = 'Pay via UPI';
 
-  const payNowBtn = document.getElementById('payNowBtn');
-  if (!payNowBtn) return;
+        const upiLink =
+          `upi://pay?pa=${UPI_CONFIG.upiId}` +
+          `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+          `&am=${book.price}` +
+          `&cu=INR` +
+          `&tn=${encodeURIComponent(book.upiDescription)}`;
 
-  const upiLink =
-    `upi://pay?pa=${UPI_CONFIG.upiId}` +
-    `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-    `&am=${encodeURIComponent(book.price)}` +
-    `&cu=${UPI_CONFIG.currency}` +
-    `&tn=${encodeURIComponent(book.upiDescription)}`;
+        payNowBtn.href = upiLink;
+        payNowBtn.target = '_blank';
 
-  payNowBtn.href = upiLink;
-  payNowBtn.target = '_self'; // REQUIRED for mobile
-  payNowBtn.textContent = 'PAY NOW';
-  payNowBtn.classList.remove('disabled');
-  payNowBtn.style.pointerEvents = 'auto';
+        payNowBtn.onclick = () => {
+          payNowBtn.classList.add('disabled');
+          payNowBtn.style.pointerEvents = 'none';
+          payNowBtn.textContent = 'Opening UPI App...';
+        };
+      }
 
-  payNowBtn.onclick = () => {
-    payNowBtn.classList.add('disabled');
-    payNowBtn.textContent = 'Opening UPI App…';
-  };
-
-  const form = document.getElementById('paymentForm');
-  if (form) form.reset();
-},
-
+      const form = document.getElementById('paymentForm');
+      if (form) form.reset();
+    },
 
     closePaymentModal() {
       const modal = document.getElementById('paymentModal');
@@ -447,17 +447,14 @@ renderBooks() {
 
   grid.innerHTML = '';
 
-  // Bundle first
-  grid.appendChild(this.createBundleCard());
+  // Render individual books
+  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
 
-  // Then individual books
-  booksData.forEach(book => {
-    grid.appendChild(this.createBookCard(book));
-  });
+  // Render the bundle card at the top (or bottom)
+  grid.appendChild(this.createBundleCard());
 
   this.setupTiltEffects();
 },
-
 setupBookActions() {
   const grid = document.getElementById('booksGrid');
   if (!grid) return;
@@ -465,7 +462,6 @@ setupBookActions() {
   grid.addEventListener('click', e => {
     const button = e.target.closest('button');
     if (!button) return;
-
     const action = button.dataset.action;
     const card = button.closest('.book-card');
     if (!action || !card) return;
@@ -483,11 +479,13 @@ setupBookActions() {
     }
 
     if (action === 'buy-bundle') {
-      this.openPaymentModal({
+      // Create a pseudo-book object for bundle
+      const bundleBook = {
         title: 'Bundle of 4 Books',
         price: 99,
         upiDescription: 'Payment for Bundle of 4 Books'
-      });
+      };
+      this.openPaymentModal(bundleBook);
     }
   });
 },
@@ -528,5 +526,4 @@ renderBooks() {
   } else app.init();
 
   window.app = app;
-
 })();
