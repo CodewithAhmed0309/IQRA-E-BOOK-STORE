@@ -527,3 +527,71 @@ renderBooks() {
 
   window.app = app;
 })();
+/**
+ * PAY NOW BUTTON - UPI REDIRECT LOGIC
+ */
+
+function openUPIPayment(book) {
+  const UPI_CONFIG = {
+    upiId: 'shaikjahash@ibl',
+    payeeName: 'Shaik Jahash Ahmed',
+    currency: 'INR'
+  };
+
+  if (!book) return alert('Book not found!');
+
+  const amount = book.price;
+  const description = encodeURIComponent(book.upiDescription);
+  const payeeName = encodeURIComponent(UPI_CONFIG.payeeName);
+  const upiId = encodeURIComponent(UPI_CONFIG.upiId);
+  const currency = UPI_CONFIG.currency;
+
+  // Construct UPI deep link
+  const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=${currency}&tn=${description}&mode=02`;
+
+  // Create a temporary anchor to attempt app open
+  const tempLink = document.createElement('a');
+  tempLink.href = upiLink;
+  tempLink.style.display = 'none';
+  document.body.appendChild(tempLink);
+
+  const start = Date.now();
+  let clicked = false;
+
+  // Attempt to open UPI app
+  tempLink.click();
+  clicked = true;
+
+  // Fallback: If after 1 second the app isn’t opened, redirect to Play Store / App Store UPI page
+  setTimeout(() => {
+    const elapsed = Date.now() - start;
+    if (clicked && elapsed < 1200) {
+      // User likely does not have a UPI app installed
+      if (/Android/i.test(navigator.userAgent)) {
+        window.location.href = 'https://play.google.com/store/search?q=upi&c=apps';
+      } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = 'https://apps.apple.com/in/search?term=upi';
+      } else {
+        alert('Please install a UPI app to complete the payment.');
+      }
+    }
+  }, 1000);
+
+  document.body.removeChild(tempLink);
+}
+
+/**
+ * Example usage:
+ * <button id="payNowBtn">Pay Now</button>
+ */
+
+document.getElementById('payNowBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  // Replace this with the actual book object or bundle object
+  const book = {
+    price: 29,
+    upiDescription: 'Payment for Khwaab Ki Tabeer'
+  };
+  openUPIPayment(book);
+});
+
