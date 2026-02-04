@@ -1,597 +1,297 @@
-/**
- * IQRA E-STORE - Main Application (Refactored for Readability)
- * All features preserved: books rendering, PDF preview, UPI payment, particle canvas, copy buttons, navbar, sliders, counters, newsletter
- */
-
-(function() {
-  'use strict';
-
-  /***********************
-   * E-Book Data & Config *
-   ***********************/
-  const booksData = [
-    { id: 4, title: '<strong>Makaan No. 27 Shadows of the Forgotten</strong>', coverImage: 'F.png', previewPDF: 'PD.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Makaan No. 27' },
-    { id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
-    { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Khwaab Ki Tabeer' },
-    { id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 49, upiDescription: 'Payment for The Art Of Being Alone' }
-  ];
-
-  const UPI_CONFIG = {
-    upiId: 'shaikjahash@ibl',
-    payeeName: 'Shaik Jahash Ahmed',
-    sellerNumber: '8639917686',
-    currency: 'INR'
-  };
-
-  /**************************
-   * Main App State & Init  *
-   **************************/
-  const app = {
-    currentBook: null,
-    pdfViewer: null,
-    particleCanvas: null,
-    particleCtx: null,
-    particles: [],
-    animationId: null,
-
-    init() {
-      this.initParticleCanvas();
-      this.renderBooks();
-      this.setupBookActions();
-      this.setupModals();
-      this.setupPDFViewer();
-    },
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IQRA E-STORE – Premium E-Book Library</title>
 
 
-    /**************************
-     * Particle Canvas Logic  *
-     **************************/
-    initParticleCanvas() {
-      this.particleCanvas = document.getElementById('particleCanvas');
-      if (!this.particleCanvas) return;
+<link rel="stylesheet" href="styles/main.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
 
-      this.particleCtx = this.particleCanvas.getContext('2d');
-      const canvas = this.particleCanvas;
-      const ctx = this.particleCtx;
-      const appRef = this;
+<body>
 
-      class Particle {
-        constructor() { this.reset(); }
-        reset() {
-          this.x = Math.random() * canvas.width;
-          this.y = Math.random() * canvas.height;
-          this.size = Math.random() * 2 + 0.5;
-          this.speedX = (Math.random() - 0.5) * 0.5;
-          this.speedY = (Math.random() - 0.5) * 0.5;
-          this.opacity = Math.random() * 0.5 + 0.2;
-          this.color = `rgba(212, 175, 55, ${this.opacity})`;
-        }
-        update() {
-          this.x += this.speedX;
-          this.y += this.speedY;
-          if (this.x < 0) this.x = canvas.width;
-          if (this.x > canvas.width) this.x = 0;
-          if (this.y < 0) this.y = canvas.height;
-          if (this.y > canvas.height) this.y = 0;
-        }
-        draw() {
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fillStyle = this.color;
-          ctx.fill();
-        }
-      }
+<div class="background-container">
+  <div class="gradient-orb orb-1"></div>
+  <div class="gradient-orb orb-2"></div>
+  <div class="gradient-orb orb-3"></div>
+  <canvas id="particleCanvas"></canvas>
+</div>
 
-      function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
+<nav class="main-nav" role="navigation" aria-label="Main navigation">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <a href="#home" class="brand-link">
+        <span class="brand-icon"></span>
+        <span class="brand-text">IQRA E-STORE</span>
+      </a>
+    </div>
+    
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+    
+    <ul class="nav-menu" id="navMenu">
+      <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
+      <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
+      <li class="nav-item nav-item-dropdown">
+        <a href="#services" class="nav-link">Services <span class="dropdown-arrow">▼</span></a>
+        <ul class="dropdown-menu">
+          <li><a href="#services" class="dropdown-link">E-Book Library</a></li>
+          <li><a href="#services" class="dropdown-link">Premium Content</a></li>
+          <li><a href="#services" class="dropdown-link">Digital Collections</a></li>
+        </ul>
+      </li>
+      <li class="nav-item"><a href="book.html" class="nav-link">Featured E-Books</a></li>
+      <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+    </ul>
+  </div>
+</nav>
 
-      function initParticles() {
-        appRef.particles = [];
-        const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
-        for (let i = 0; i < particleCount; i++) appRef.particles.push(new Particle());
-      }
+<section class="hero-section" id="home">
+  <div class="hero-container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span>✨ Premium Digital Library</span>
+      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-line">Discover</span>
+        <span class="hero-title-line gradient-text">Premium E-Books</span>
+        <span class="hero-title-line">at Your Fingertips</span>
+      </h1>
+      <p class="hero-subtitle">
+        Explore our curated collection of premium digital books. Instant access, 
+        lifetime ownership, and seamless reading experience.
+      </p>
+      <div class="hero-cta">
+        <a href="book.html" class="btn btn-hero btn-primary btn-explore">Explore Books</a>
+        <a href="#about" class="btn btn-hero btn-secondary">Learn More</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-image-wrapper">
+        <div class="floating-card card-1"><div class="card-shine"></div></div>
+        <div class="floating-card card-2"><div class="card-shine"></div></div>
+        <div class="floating-card card-3"><div class="card-shine"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-indicator">
+    <span class="scroll-text">Scroll to explore</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
 
-      function drawConnections() {
-        const particles = appRef.particles;
-        for (let i = 0; i < particles.length; i++) {
-          for (let j = i + 1; j < particles.length; j++) {
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 100) {
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - dist / 100)})`;
-              ctx.lineWidth = 0.5;
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.stroke();
-            }
-          }
-        }
-      }
+<section class="hero-explore">
+  <div class="explore-container">
+    <a href="book.html" class="btn btn-primary btn-explore-page" aria-label="Browse our featured e-books collection">
+      <span class="btn-text">Explore Books</span>
+      <span class="btn-icon"></span>
+    </a>
+    <p class="explore-subtitle">Discover our premium collection of digital books</p>
+  </div>
+</section>
 
-      function animate() {
-        const previewModal = document.getElementById('previewModal');
-        if (previewModal?.classList.contains('active')) {
-          appRef.animationId = requestAnimationFrame(animate);
-          return; // Skip rendering when preview open
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        appRef.particles.forEach(p => { p.update(); p.draw(); });
-        drawConnections();
-        appRef.animationId = requestAnimationFrame(animate);
-      }
-
-      window.addEventListener('resize', debounce(() => { resizeCanvas(); initParticles(); }, 200));
-
-      resizeCanvas();
-      initParticles();
-      animate();
-    },
-
-    /**************************
-     * Book Grid & Cards      *
-     **************************/
-    renderBooks() {
-      const grid = document.getElementById('booksGrid');
-      if (!grid) return;
-
-      grid.innerHTML = '';
-      booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
-      this.setupTiltEffects();
-    },
-
-    createBookCard(book) {
-      const card = document.createElement('div');
-      card.className = 'book-card';
-      card.setAttribute('role', 'listitem');
-      card.dataset.bookId = book.id;
-
-      card.innerHTML = `
-        <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
-        <div class="book-title">${book.title}</div>
-        <div class="book-price">
-          <span class="old-price">₹${book.oldPrice}</span>
-          <span class="new-price">₹${book.price}</span>
+<main class="main-content">
+  <section class="about-section" id="about">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-badge">About Us</span>
+        <h2 class="section-title">Your Gateway to <span class="gradient-text">Premium Knowledge</span></h2>
+        <p class="section-description">
+          We are dedicated to providing access to premium digital content, 
+          making knowledge accessible to everyone, everywhere.
+        </p>
+      </div>
+      <div class="about-content">
+        <div class="about-feature">
+          <div class="feature-icon"></div>
+          <h3>Instant Access</h3>
+          <p>Get immediate access to your purchased e-books</p>
         </div>
-        <div class="card-actions">
-          <button class="btn btn-preview" data-action="preview">Preview</button>
-          <button class="btn btn-buy" data-action="buy">Buy Now</button>
+        <div class="about-feature">
+          <div class="feature-icon"></div>
+          <h3>Secure Payment</h3>
+          <p>Safe and secure payment processing</p>
         </div>
-      `;
-      return card;
-    },
-
-    setupTiltEffects() {
-      const cards = document.querySelectorAll('.book-card');
-      cards.forEach(card => {
-        card.addEventListener('mousemove', e => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const rotateX = (y - rect.height / 2) / 15;
-          const rotateY = (rect.width / 2 - x) / 15;
-          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
-        });
-        card.addEventListener('mouseleave', () => card.style.transform = '');
-      });
-    },
-
-    setupBookActions() {
-      const grid = document.getElementById('booksGrid');
-      if (!grid) return;
-
-      grid.addEventListener('click', e => {
-        const button = e.target.closest('button');
-        if (!button) return;
-        const action = button.dataset.action;
-        const card = button.closest('.book-card');
-        if (!action || !card) return;
-
-        const bookId = parseInt(card.dataset.bookId, 10);
-        const book = booksData.find(b => b.id === bookId);
-        if (!book) return;
-
-        if (action === 'preview') this.openPreviewModal(book);
-        if (action === 'buy') this.openPaymentModal(book);
-      });
-    },
-
-    /**************************
-     * Modal Functionality    *
-     **************************/
-    setupModals() {
-      // Preview Modal
-      const previewModal = document.getElementById('previewModal');
-      const previewClose = document.getElementById('previewClose');
-      const previewBackdrop = previewModal?.querySelector('[data-modal="preview"]');
-      const unlockBtn = document.getElementById('unlockBook');
-
-      previewClose?.addEventListener('click', () => this.closePreviewModal());
-      previewBackdrop?.addEventListener('click', () => this.closePreviewModal());
-      unlockBtn?.addEventListener('click', () => {
-        if (this.currentBook) {
-          this.closePreviewModal();
-          setTimeout(() => this.openPaymentModal(this.currentBook), 300);
-        }
-      });
-
-      // Payment Modal
-      const paymentModal = document.getElementById('paymentModal');
-      const paymentClose = document.getElementById('paymentClose');
-      const paymentBackdrop = paymentModal?.querySelector('[data-modal="payment"]');
-      const paymentForm = document.getElementById('paymentForm');
-
-      paymentClose?.addEventListener('click', () => this.closePaymentModal());
-      paymentBackdrop?.addEventListener('click', () => this.closePaymentModal());
-      paymentForm?.addEventListener('submit', e => {
-        e.preventDefault();
-        this.handlePaymentSubmit();
-      });
-
-      // Close modals on Escape key
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-          if (previewModal?.classList.contains('active')) this.closePreviewModal();
-          if (paymentModal?.classList.contains('active')) this.closePaymentModal();
-        }
-      });
-    },
-
-    /**************************
-     * PDF Viewer Functions   *
-     **************************/
-    setupPDFViewer() {
-      // initialized lazily when opening preview
-    },
-
-    openPreviewModal(book) {
-      this.currentBook = book;
-      const modal = document.getElementById('previewModal');
-      modal?.classList.add('active');
-      document.body.classList.add('modal-open');
-      this.loadPDFPreview(book.previewPDF);
-    },
-
-    closePreviewModal() {
-      const modal = document.getElementById('previewModal');
-      modal?.classList.remove('active');
-      document.body.classList.remove('modal-open');
-
-      const pdfViewer = document.getElementById('pdfViewer');
-      if (pdfViewer) pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';
-    },
-
-    async loadPDFPreview(pdfUrl) {
-      const pdfViewer = document.getElementById('pdfViewer');
-      if (!pdfViewer) return;
-
-      if (typeof pdfjsLib === 'undefined') {
-        pdfViewer.innerHTML = '<p style="color: #ff4444;">PDF.js library not loaded.</p>';
-        return;
-      }
-
-      pdfViewer.innerHTML = '<div class="pdf-loading">Loading preview…</div>';
-      const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
-      pdfViewer.innerHTML = '';
-
-      const pagesToRender = Math.min(3, pdfDoc.numPages);
-      for (let i = 1; i <= pagesToRender; i++) {
-        this.renderPDFPage(pdfDoc, i, pdfViewer);
-      }
-    },
-
-    async renderPDFPage(pdfDoc, pageNum, container) {
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 1 });
-      const scale = Math.min((container.clientWidth - 32) / viewport.width, 1);
-      const scaledViewport = page.getViewport({ scale });
-
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      const outputScale = window.devicePixelRatio || 1;
-
-      canvas.width = Math.floor(scaledViewport.width * outputScale);
-      canvas.height = Math.floor(scaledViewport.height * outputScale);
-      canvas.style.width = `${scaledViewport.width}px`;
-      canvas.style.height = `${scaledViewport.height}px`;
-      context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
-
-      await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
-      container.appendChild(canvas);
-
-      if (pageNum < pdfDoc.numPages) {
-        const spacer = document.createElement('div');
-        spacer.style.height = '2rem';
-        container.appendChild(spacer);
-      }
-    },
-
-    /**************************
-     * Payment Functions      *
-     **************************/
-    openPaymentModal(book) {
-      this.currentBook = book;
-      const modal = document.getElementById('paymentModal');
-      if (!modal) return;
-
-      modal.classList.add('active');
-      document.body.classList.add('modal-open');
-
-      const payNowBtn = document.getElementById('payNowBtn');
-      if (payNowBtn) {
-        payNowBtn.classList.remove('disabled');
-        payNowBtn.style.pointerEvents = 'auto';
-        payNowBtn.textContent = 'Pay via UPI';
-
-        const upiLink =
-          `upi://pay?pa=${UPI_CONFIG.upiId}` +
-          `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
-          `&am=${book.price}` +
-          `&cu=INR` +
-          `&tn=${encodeURIComponent(book.upiDescription)}`;
-
-        payNowBtn.href = upiLink;
-        payNowBtn.target = '_blank';
-
-        payNowBtn.onclick = () => {
-          payNowBtn.classList.add('disabled');
-          payNowBtn.style.pointerEvents = 'none';
-          payNowBtn.textContent = 'Opening UPI App...';
-        };
-      }
-
-      const form = document.getElementById('paymentForm');
-      if (form) form.reset();
-    },
-
-    closePaymentModal() {
-      const modal = document.getElementById('paymentModal');
-      if (modal) modal.classList.remove('active');
-      document.body.classList.remove('modal-open');
-    },
-
-  handlePaymentSubmit() {
-  const nameInput = document.getElementById('userName');
-  const txnInput = document.getElementById('transactionId');
-
-  if (!nameInput || !txnInput) {
-    alert('Form error. Please reload the page.');
-    return;
-  }
-
-  const name = nameInput.value.trim();
-  const txnId = txnInput.value.trim();
-
-  if (!name) {
-    alert('Please enter your name');
-    nameInput.focus();
-    return;
-  }
-
-  if (!txnId) {
-    alert('Please enter your transaction ID');
-    txnInput.focus();
-    return;
-  }
-
-  if (!this.currentBook) {
-    alert('No book selected');
-    return;
-  }
-
-  // Create message
-  const message =
-`Hi, I paid for "${this.currentBook.title.replace(/<[^>]*>/g, '')}".
-Name: ${name}
-Txn ID: ${txnId}`;
-
-  // Copy to clipboard
-  navigator.clipboard.writeText(message).then(() => {
-    alert(
-      'Payment noted!\n\n' +
-      'Message copied.\n' +
-      'Instagram will open now.\n\n' +
-      'Tap "Message" → Paste → Send'
-    );
-
-    const instaUsername = 'codewithahmed_0309';
-    const instaAppUrl = `instagram://user?username=${instaUsername}`;
-    const instaWebUrl = `https://www.instagram.com/${instaUsername}/`;
-
-    // Try opening app
-    window.location.href = instaAppUrl;
-
-    // Fallback to browser
-    setTimeout(() => {
-      window.open(instaWebUrl, '_blank');
-    }, 700);
-
-    this.closePaymentModal();
-  }).catch(() => {
-    alert('Unable to copy message. Please copy manually.');
-  });
-}
-,
-
-createBundleCard() {
-  const card = document.createElement('div');
-  card.className = 'book-card bundle-card';
-  card.setAttribute('role', 'listitem');
-  card.dataset.bookId = 'bundle'; // special id for bundle
-
-  // Inner HTML with price
-  card.innerHTML = `
-    <div class="bundle-header">
-      <h3>🎉 Special Bundle Offer!</h3>
-      <p>Get all 4 books for only <strong>₹99</strong></p>
+        <div class="about-feature">
+          <div class="feature-icon"></div>
+          <h3>Multi-Device</h3>
+          <p>Read on any device, anytime, anywhere</p>
+        </div>
+      </div>
     </div>
-    <div class="bundle-covers">
-      ${booksData.map(book => `<img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">`).join('')}
+  </section>
+
+  <section class="services-section" id="services">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-badge">Our Services</span>
+        <h2 class="section-title">What We <span class="gradient-text">Offer</span></h2>
+      </div>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-icon"></div>
+          <h3>E-Book Library</h3>
+          <p>Extensive collection of premium e-books across various genres</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"></div>
+          <h3>Premium Content</h3>
+          <p>Exclusive access to high-quality digital publications</p>
+        </div>
+        <div class="service-card">
+          <div class="service-icon"></div>
+          <h3>Curated Collections</h3>
+          <p>Handpicked books organized by themes and interests</p>
+        </div>
+      </div>
     </div>
-    <div class="bundle-price" style="font-size: 1.2rem; font-weight: bold; margin: 0.5rem 0;">₹99</div>
-    <div class="card-actions">
-      <button class="btn btn-buy" data-action="buy-bundle">BUY BUNDLE</button>
+  </section>
+
+  <section class="testimonials-section">
+    <div class="section-container">
+      <div class="section-header">
+        <span class="section-badge">Testimonials</span>
+        <h2 class="section-title">What Our <span class="gradient-text">Readers Say</span></h2>
+      </div>
+      <div class="testimonials-slider">
+        <div class="testimonial-card active">
+          <div class="testimonial-content">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">"Amazing collection of books! The quality is outstanding and the purchase process was seamless."</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">A</div>
+              <div class="author-info"><h4>AZHAR ZAIN</h4><span>Regular Reader</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">"Best e-book store I've used. Instant delivery and great customer support!"</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">S</div>
+              <div class="author-info"><h4>SUHAIL</h4><span>Book Enthusiast</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-content">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">"Premium quality content at affordable prices. Highly recommended!"</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">M</div>
+              <div class="author-info"><h4>venkat ram</h4><span>Digital Reader</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonials-controls">
+        <button class="testimonial-btn prev" aria-label="Previous testimonial">‹</button>
+        <div class="testimonial-dots">
+          <span class="dot active" data-slide="0"></span>
+          <span class="dot" data-slide="1"></span>
+          <span class="dot" data-slide="2"></span>
+        </div>
+        <button class="testimonial-btn next" aria-label="Next testimonial">›</button>
+      </div>
     </div>
-  `;
+  </section>
+</main>
 
-  return card;
-}
-,
-renderBooks() {
-  const grid = document.getElementById('booksGrid');
-  if (!grid) return;
+<div class="preview-modal" id="previewModal" role="dialog" aria-labelledby="preview-title" aria-modal="true">
+  <div class="modal-backdrop" data-modal="preview"></div>
+  <div class="preview-container">
+    <button class="modal-close" id="previewClose" aria-label="Close preview">✕</button>
+    <div class="preview-header">
+      <h2 id="preview-title">Preview</h2>
+      <button class="btn btn-unlock" id="unlockBook" aria-label="Unlock full book">
+        <span></span> UNLOCK BOOK
+      </button>
+    </div>
+    <div class="pdf-viewer-container">
+      <div class="pdf-viewer" id="pdfViewer" role="document" aria-label="PDF preview">
+        <div class="pdf-loading">
+          <div class="loading-spinner"></div>
+          <p>Loading preview…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-  grid.innerHTML = '';
+<div class="payment-modal" id="paymentModal">
+  <div class="payment-container" style="background: #121212; width: 95%; max-width: 450px; padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; max-height: 90vh; overflow-y: auto;">
+    
+    <button onclick="document.getElementById('paymentModal').style.display='none'" style="position: absolute; right: 15px; top: 15px; background: none; border: none; color: #666; font-size: 24px; cursor: pointer;">✕</button>
+    
+    <h2 style="color: white; text-align: center; font-family: 'Playfair Display'; margin-bottom: 20px;">Unlock Premium Access</h2>
 
-  // Render individual books
-  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+    
 
-  // Render the bundle card at the top (or bottom)
-  grid.appendChild(this.createBundleCard());
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="QR.jpg" alt="Scan to Pay" style="width: 140px; border-radius: 10px; border: 4px solid white; margin-bottom: 10px;">
+      <p style="color: #aaa; font-size: 0.9rem;">UPI: <span style="color: white;">shaikjahash@ibl</span></p>
+    </div>
 
-  this.setupTiltEffects();
-},
-setupBookActions() {
-  const grid = document.getElementById('booksGrid');
-  if (!grid) return;
+    <form id="paymentForm">
+      <input type="text" placeholder="Enter Your Full Name" required style="width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;">
+      <input type="text" placeholder="Paste Transaction ID Here" required style="width: 100%; padding: 12px; margin-bottom: 15px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;">
+      <a id="instagramRedirect"
+   class="btn btn-instagram"
+   target="_blank"
+   rel="noopener">
+   Open Instagram DM
+</a>
 
-  grid.addEventListener('click', e => {
-    const button = e.target.closest('button');
-    if (!button) return;
-    const action = button.dataset.action;
-    const card = button.closest('.book-card');
-    if (!action || !card) return;
+      <button type="submit"  id="sendBtn"style="width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        SEND 
+      </button>
+    </form>
 
-    if (action === 'preview') {
-      const bookId = parseInt(card.dataset.bookId, 10);
-      const book = booksData.find(b => b.id === bookId);
-      if (book) this.openPreviewModal(book);
-    }
+  </div>
+</div>
 
-    if (action === 'buy') {
-      const bookId = parseInt(card.dataset.bookId, 10);
-      const book = booksData.find(b => b.id === bookId);
-      if (book) this.openPaymentModal(book);
-    }
+<footer class="main-footer" id="contact" role="contentinfo">
+  <div class="footer-container">
+    <div class="footer-content">
+      <div class="footer-column footer-brand">
+        <div class="footer-logo"> IQRA E-STORE</div>
+        <p>Your premium destination for digital books.</p>
+        <div class="social-links">
+          <a href="#" class="social-link">FB</a>
+          <a href="#" class="social-link">TW</a>
+          <a href="https://wa.me/8639917686" class="social-link">WA</a>
+        </div>
+      </div>
+      <div class="footer-column">
+        <h3 class="footer-title">Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="book.html">E-Books</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3 class="footer-title">Contact</h3>
+        <p>shaikjahashahmed9@gmail.com</p>
+        <p>+91 8639917686</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 IQRA E-STORE. Website by Shaik Jahash Ahmed</p>
+    </div>
+  </div>
+</footer>
 
-    if (action === 'buy-bundle') {
-      // Create a pseudo-book object for bundle
-      const bundleBook = {
-        title: 'Bundle of 4 Books',
-        price: 99,
-        upiDescription: 'Payment for Bundle of 4 Books'
-      };
-      this.openPaymentModal(bundleBook);
-    }
-  });
-},
-renderBooks() {
-  const grid = document.getElementById('booksGrid');
-  if (!grid) return;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<script src="js/app.js"></script>
 
-  grid.innerHTML = '';
-
-  // Render the bundle card first
-  grid.appendChild(this.createBundleCard());
-
-  // Then render individual books
-  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
-
-  this.setupTiltEffects();
-},
-
-    /**************************
-     * Utility Functions      *
-     **************************/
-    stripHtml(html) { const div = document.createElement('div'); div.innerHTML = html; return div.textContent || div.innerText || ''; }
-  };
-
-  /**************************
-   * Helper Functions       *
-   **************************/
-  function debounce(fn, delay) {
-    let timer;
-    return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
-  }
-
-  /**************************
-   * Initialize App         *
-   **************************/
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => app.init());
-  } else app.init();
-
-  window.app = app;
-})();
-/**
- * PAY NOW BUTTON - UPI REDIRECT LOGIC
- */
-
-function openUPIPayment(book) {
-  const UPI_CONFIG = {
-    upiId: 'shaikjahash@ibl',
-    payeeName: 'Shaik Jahash Ahmed',
-    currency: 'INR'
-  };
-
-  if (!book) return alert('Book not found!');
-
-  const amount = book.price;
-  const description = encodeURIComponent(book.upiDescription);
-  const payeeName = encodeURIComponent(UPI_CONFIG.payeeName);
-  const upiId = encodeURIComponent(UPI_CONFIG.upiId);
-  const currency = UPI_CONFIG.currency;
-
-  // Construct UPI deep link
-  const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=${currency}&tn=${description}&mode=02`;
-
-  // Create a temporary anchor to attempt app open
-  const tempLink = document.createElement('a');
-  tempLink.href = upiLink;
-  tempLink.style.display = 'none';
-  document.body.appendChild(tempLink);
-
-  const start = Date.now();
-  let clicked = false;
-
-  // Attempt to open UPI app
-  tempLink.click();
-  clicked = true;
-
-  // Fallback: If after 1 second the app isn’t opened, redirect to Play Store / App Store UPI page
-  setTimeout(() => {
-    const elapsed = Date.now() - start;
-    if (clicked && elapsed < 1200) {
-      // User likely does not have a UPI app installed
-      if (/Android/i.test(navigator.userAgent)) {
-        window.location.href = 'https://play.google.com/store/search?q=upi&c=apps';
-      } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = 'https://apps.apple.com/in/search?term=upi';
-      } else {
-        alert('Please install a UPI app to complete the payment.');
-      }
-    }
-  }, 1000);
-
-  document.body.removeChild(tempLink);
-}
-
-/**
- * Example usage:
- * <button id="payNowBtn">Pay Now</button>
- */
-
-document.getElementById('payNowBtn')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  // Replace this with the actual book object or bundle object
-  const book = {
-    price: 29,
-    upiDescription: 'Payment for Khwaab Ki Tabeer'
-  };
-  openUPIPayment(book);
-});
-
+</body>
+</html>
