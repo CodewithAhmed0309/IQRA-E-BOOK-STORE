@@ -1,8 +1,8 @@
 /**
- * IQRA E-STORE - Production-Ready Refactored Application
- * - Resolved: Function overrides and duplicate logic.
- * - Optimized: Particle performance and PDF memory management.
- * - Hardened: UPI deep-linking for mobile compatibility (PhonePe/GPay).
+ * IQRA E-STORE - Mobile & Performance Optimized Version
+ * - Fixed: Buy button not responding on mobile.
+ * - Optimized: Particle canvas, PDF preview, mouse effects.
+ * - Hardened: UPI deep-linking and payment modal.
  */
 
 (function() {
@@ -42,12 +42,19 @@
 
     init() {
       if (this.isInitialized) return;
-      
+
       this.initParticleCanvas();
       this.renderStorefront();
       this.setupEventListeners();
       this.setupModals();
-      
+      this.initScrollAnimations();
+
+      // Only desktop
+      if(window.innerWidth > 768){
+        this.setupTiltEffects();
+        this.initMagneticButtons();
+      }
+
       this.isInitialized = true;
     },
 
@@ -89,34 +96,37 @@
       function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        appRef.particles = Array.from({ length: Math.floor((canvas.width * canvas.height) / 18000) }, () => new Particle());
+        const count = window.innerWidth < 768 ? 50 : Math.floor((canvas.width * canvas.height) / 18000);
+        appRef.particles = Array.from({ length: count }, () => new Particle());
       }
 
       function animate() {
-        // Pause animation if modal is open or tab is hidden to save battery
         if (document.body.classList.contains('modal-open') || document.hidden) {
           appRef.animationId = requestAnimationFrame(animate);
           return;
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Optimized connection drawing
+
         const pts = appRef.particles;
         for (let i = 0; i < pts.length; i++) {
           pts[i].update();
           pts[i].draw();
-          for (let j = i + 1; j < pts.length; j++) {
-            const dx = pts[i].x - pts[j].x;
-            const dy = pts[i].y - pts[j].y;
-            const dist = dx * dx + dy * dy; // Use squared distance for speed
-            if (dist < 10000) {
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - Math.sqrt(dist) / 100)})`;
-              ctx.lineWidth = 0.5;
-              ctx.moveTo(pts[i].x, pts[i].y);
-              ctx.lineTo(pts[j].x, pts[j].y);
-              ctx.stroke();
+
+          // Only draw lines on desktop
+          if(window.innerWidth >= 768){
+            for (let j = i + 1; j < pts.length; j++) {
+              const dx = pts[i].x - pts[j].x;
+              const dy = pts[i].y - pts[j].y;
+              const dist = dx * dx + dy * dy;
+              if (dist < 10000) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - Math.sqrt(dist)/100)})`;
+                ctx.lineWidth = 0.5;
+                ctx.moveTo(pts[i].x, pts[i].y);
+                ctx.lineTo(pts[j].x, pts[j].y);
+                ctx.stroke();
+              }
             }
           }
         }
@@ -137,17 +147,14 @@
 
       const fragment = document.createDocumentFragment();
 
-      // 1. Render Bundle Card
+      // Bundle Card
       fragment.appendChild(this.createBundleCard());
 
-      // 2. Render Individual Books
-      booksData.forEach(book => {
-        fragment.appendChild(this.createBookCard(book));
-      });
+      // Individual Books
+      booksData.forEach(book => fragment.appendChild(this.createBookCard(book)));
 
       grid.innerHTML = '';
       grid.appendChild(fragment);
-      this.setupTiltEffects();
     },
 
     createBundleCard() {
@@ -215,6 +222,8 @@
     },
 
     setupTiltEffects() {
+      if(window.innerWidth < 768) return; // disable on mobile
+
       document.querySelectorAll('.book-card').forEach(card => {
         card.addEventListener('mousemove', e => {
           const rect = card.getBoundingClientRect();
@@ -223,6 +232,23 @@
           card.style.transform = `perspective(1000px) rotateX(${-y * 15}deg) rotateY(${x * 15}deg) translateY(-8px)`;
         });
         card.addEventListener('mouseleave', () => card.style.transform = '');
+      });
+    },
+
+    initMagneticButtons() {
+      if(window.innerWidth < 768) return; // disable on mobile
+
+      const buttons = document.querySelectorAll('.btn-buy, .btn-hero');
+      buttons.forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+
+          btn.style.transform = `translate(${x * 0.3}px, ${y * 0.5}px) scale(1.05)`;
+        });
+
+        btn.addEventListener('mouseleave', () => btn.style.transform = '');
       });
     },
 
@@ -252,90 +278,28 @@
 
       window.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
     },
-  /**
-   * INTERSECTION OBSERVER: Cinematic Reveal
-   */
-  initScrollAnimations() {
-    const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -50px 0px' };
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          // Add a slight staggered delay to children if it's a grid
-          if(entry.target.id === 'booksGrid') {
-             Array.from(entry.target.children).forEach((child, i) => {
-                setTimeout(() => child.classList.add('revealed'), i * 100);
-             });
-          }
-        }
-      });
-    }, observerOptions);
-
-    // Watch sections and cards
-    document.querySelectorAll('section, .book-card').forEach(el => observer.observe(el));
-  },
-
-  /**
-   * MAGNETIC BUTTONS: Premium Attraction
-   */
-  initMagneticButtons() {
-    const buttons = document.querySelectorAll('.btn-buy, .btn-hero');
-    buttons.forEach(btn => {
-      btn.addEventListener('mousemove', (e) => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        
-        btn.style.transform = `translate(${x * 0.3}px, ${y * 0.5}px) scale(1.05)`;
-      });
-      
-      btn.addEventListener('mouseleave', () => {
-        btn.style.transform = '';
-      });
-    });
-  },
-
-  /**
-   * UPI HARDENING: Enhanced Trust Logic
-   */
-  async handlePaymentSubmit() {
-    const payBtn = document.getElementById('sendBtn');
-    payBtn.innerHTML = 'Verifying... <span class="loading-spinner-small"></span>';
-    payBtn.style.opacity = '0.7';
-
-    // Simulate high-end verification check
-    setTimeout(() => {
-        // Original logic starts here...
-        const name = document.getElementById('userName')?.value.trim();
-        const txnId = document.getElementById('transactionId')?.value.trim();
-        // ... rest of your copy/redirect code
-        payBtn.innerHTML = 'SENT SUCCESSFULLY';
-        payBtn.style.background = '#d4af37';
-    }, 800);
-  },
 
     async loadPDFPreview(pdfUrl) {
       const container = document.getElementById('pdfViewer');
       if (!container || typeof pdfjsLib === 'undefined') return;
 
       container.innerHTML = '<div class="pdf-loading">Loading preview...</div>';
-      
+
       try {
         const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
         container.innerHTML = '';
-        const pages = Math.min(3, pdfDoc.numPages);
+        const pages = Math.min(window.innerWidth < 768 ? 1 : 3, pdfDoc.numPages); // mobile = 1 page
 
         for (let i = 1; i <= pages; i++) {
           const page = await pdfDoc.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 });
+          const viewport = page.getViewport({ scale: 1.2 }); // slightly smaller for mobile
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
-          
+
           canvas.width = viewport.width;
           canvas.height = viewport.height;
           canvas.style.width = '100%';
-          
+
           await page.render({ canvasContext: context, viewport }).promise;
           container.appendChild(canvas);
         }
@@ -358,22 +322,18 @@
       if (viewer) viewer.innerHTML = '';
     },
 
-    /**************************
-     * Payment Logic (Hardened)*
-     **************************/
     openPaymentModal(book) {
       this.currentBook = book;
       const modal = document.getElementById('paymentModal');
       const payBtn = document.getElementById('payNowBtn');
       if (!modal || !payBtn) return;
 
-      // Deep link construction with best-practice params for Indian UPI apps
       const upiLink = `upi://pay?pa=${UPI_CONFIG.upiId}&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}&am=${book.price}&cu=${UPI_CONFIG.currency}&tn=${encodeURIComponent(book.upiDescription)}&mode=02`;
 
       payBtn.href = upiLink;
       payBtn.classList.remove('disabled');
       payBtn.textContent = `PAY ₹${book.price} NOW`;
-      
+
       modal.classList.add('active');
       document.body.classList.add('modal-open');
     },
@@ -394,9 +354,8 @@
 
       navigator.clipboard.writeText(message).then(() => {
         alert('Payment Details Copied! Opening Instagram...');
-        
+
         const instaUser = 'codewithahmed_0309';
-        // Attempt app then fallback to web
         window.location.href = `instagram://user?username=${instaUser}`;
         setTimeout(() => {
           window.open(`https://www.instagram.com/${instaUser}/`, '_blank');
@@ -410,7 +369,29 @@
       const tmp = document.createElement('DIV');
       tmp.innerHTML = html;
       return tmp.textContent || tmp.innerText || "";
-    }
+    },
+
+    /**************************
+     * Scroll & Animation Init *
+     **************************/
+    initScrollAnimations() {
+      const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -50px 0px' };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('revealed');
+            if(entry.target.id === 'booksGrid') {
+              Array.from(entry.target.children).forEach((child, i) => {
+                setTimeout(() => child.classList.add('revealed'), i * 100);
+              });
+            }
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('section, .book-card').forEach(el => observer.observe(el));
+    },
   };
 
   /**************************
@@ -430,5 +411,5 @@
     app.init();
   }
 
-  window.iqraApp = app; // Exposed under unique namespace
+  window.iqraApp = app;
 })();
