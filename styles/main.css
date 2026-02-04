@@ -3005,4 +3005,133 @@ input:focus {
   color: #ffd700; /* gold color */
   font-weight: 600;
 }
+.pay-now-btn {
+  display: block;
+  margin-top: 15px;
+  padding: 14px;
+  text-align: center;
+  background: linear-gradient(135deg, #d4af37, #f3e6b3);
+  color: #000;
+  font-weight: 800;
+  border-radius: 30px;
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pay-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+}
+
+.pay-now-btn.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.upi-instruction-box {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px dashed #d4af37;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ddd;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.upi-instruction-box strong {
+  color: #d4af37;
+  display: block;
+  margin-bottom: 6px;
+}
+/* LUXURY DESIGN TOKENS */
+:root {
+    --primary-gold: #D4AF37;
+    --gold-glow: rgba(212, 175, 55, 0.4);
+    --bg-dark: #050505;
+    --card-glass: rgba(255, 255, 255, 0.03);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --surface-blur: 12px;
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --spring-easing: cubic-bezier(0.4, 0, 0.2, 1.4);
+}
+
+/* HIGH-END BOOK CARDS */
+.book-card {
+    background: var(--card-glass);
+    backdrop-filter: blur(var(--surface-blur));
+    border: 1px solid var(--border-glass);
+    transition: transform 0.6s var(--ease-out-expo), 
+                box-shadow 0.6s var(--ease-out-expo),
+                border-color 0.4s ease;
+    overflow: hidden;
+    position: relative;
+    border-radius: 24px;
+}
+
+.book-card:hover {
+    border-color: var(--primary-gold);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px var(--gold-glow);
+    transform: translateY(-12px) scale(1.02);
+}
+
+.book-card img {
+    transition: transform 0.8s var(--ease-out-expo);
+}
+
+.book-card:hover img {
+    transform: scale(1.08);
+}
+
+/* BUTTON PHYSICS */
+.btn {
+    position: relative;
+    transition: transform 0.2s var(--spring-easing), filter 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.btn:active {
+    transform: scale(0.92);
+}
+
+/* LUXURY MODAL (BOTTOM-SHEET ON MOBILE) */
+.preview-modal, .payment-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.preview-modal.active, .payment-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+    .payment-container, .preview-container {
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 30px 30px 0 0 !important;
+        transform: translateY(100%);
+        transition: transform 0.5s var(--ease-out-expo);
+    }
+    
+    .active .payment-container, .active .preview-container {
+        transform: translateY(0);
+    }
+}
+
+/* TRUST CUES */
+.payment-steps-card {
+    border-left: 3px solid var(--primary-gold);
+    background: linear-gradient(90deg, rgba(212,175,55,0.1) 0%, transparent 100%);
+}
 
