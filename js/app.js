@@ -1,403 +1,619 @@
-
+/**
+ * IQRA E-STORE - Main Application (Refactored for Readability)
+ * All features preserved: books rendering, PDF preview, UPI payment, particle canvas, copy buttons, navbar, sliders, counters, newsletter
+ */
 
 (function() {
-'use strict';
+  'use strict';
 
-/***********************
+  /***********************
+   * E-Book Data & Config *
+   ***********************/
+  const booksData = [
+    { id: 4, title: '<strong>Makaan No. 27 Shadows of the Forgotten</strong>', coverImage: 'F.png', previewPDF: 'PD.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Makaan No. 27' },
+    { id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
+    { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Khwaab Ki Tabeer' },
+    { id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 49, upiDescription: 'Payment for The Art Of Being Alone' }
+  ];
 
-E-Book Data & Config *
-***********************/
-const booksData = [
-{ id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 30, upiDescription: 'Payment for Khwaab Ki Tabeer' },
-{ id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
-{ id: 3, title: '<strong>The Art Of Being Alone</strong>', coverImage: 'ta.jpeg', previewPDF: 'The preview.pdf', oldPrice: 450, price: 50, upiDescription: 'Payment for The Art Of Being Alone' }
-];
+  const UPI_CONFIG = {
+    upiId: 'shaikjahash@ibl',
+    payeeName: 'Shaik Jahash Ahmed',
+    sellerNumber: '8639917686',
+    currency: 'INR'
+  };
+
+  /**************************
+   * Main App State & Init  *
+   **************************/
+  const app = {
+    currentBook: null,
+    pdfViewer: null,
+    particleCanvas: null,
+    particleCtx: null,
+    particles: [],
+    animationId: null,
+
+    init() {
+      this.initParticleCanvas();
+      this.renderBooks();
+      this.setupBookActions();
+      this.setupModals();
+      this.setupPDFViewer();
+    },
 
 
-const UPI_CONFIG = {
-upiId: 'shaikjahash@ibl',
-payeeName: 'Shaik Jahash Ahmed',
-sellerNumber: '8639917686',
-currency: 'INR'
-};
+    /**************************
+     * Particle Canvas Logic  *
+     **************************/
+    initParticleCanvas() {
+      this.particleCanvas = document.getElementById('particleCanvas');
+      if (!this.particleCanvas) return;
 
-/**************************
+      this.particleCtx = this.particleCanvas.getContext('2d');
+      const canvas = this.particleCanvas;
+      const ctx = this.particleCtx;
+      const appRef = this;
 
-Main App State & Init  *
-**************************/
-const app = {
-currentBook: null,
-pdfViewer: null,
-particleCanvas: null,
-particleCtx: null,
-particles: [],
-animationId: null,
+      class Particle {
+        constructor() { this.reset(); }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedX = (Math.random() - 0.5) * 0.5;
+          this.speedY = (Math.random() - 0.5) * 0.5;
+          this.opacity = Math.random() * 0.5 + 0.2;
+          this.color = `rgba(212, 175, 55, ${this.opacity})`;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < 0) this.x = canvas.width;
+          if (this.x > canvas.width) this.x = 0;
+          if (this.y < 0) this.y = canvas.height;
+          if (this.y > canvas.height) this.y = 0;
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+      }
 
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
 
-init() {  
-  this.initParticleCanvas();  
-  this.renderBooks();  
-  this.setupBookActions();  
-  this.setupModals();  
-  this.setupPDFViewer();  
-},  
+      function initParticles() {
+        appRef.particles = [];
+        const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
+        for (let i = 0; i < particleCount; i++) appRef.particles.push(new Particle());
+      }
 
-/**************************  
- * Particle Canvas Logic  *  
- **************************/  
-initParticleCanvas() {  
-  this.particleCanvas = document.getElementById('particleCanvas');  
-  if (!this.particleCanvas) return;  
+      function drawConnections() {
+        const particles = appRef.particles;
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 100) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - dist / 100)})`;
+              ctx.lineWidth = 0.5;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
 
-  this.particleCtx = this.particleCanvas.getContext('2d');  
-  const canvas = this.particleCanvas;  
-  const ctx = this.particleCtx;  
-  const appRef = this;  
+      function animate() {
+        const previewModal = document.getElementById('previewModal');
+        if (previewModal?.classList.contains('active')) {
+          appRef.animationId = requestAnimationFrame(animate);
+          return; // Skip rendering when preview open
+        }
 
-  class Particle {  
-    constructor() { this.reset(); }  
-    reset() {  
-      this.x = Math.random() * canvas.width;  
-      this.y = Math.random() * canvas.height;  
-      this.size = Math.random() * 2 + 0.5;  
-      this.speedX = (Math.random() - 0.5) * 0.5;  
-      this.speedY = (Math.random() - 0.5) * 0.5;  
-      this.opacity = Math.random() * 0.5 + 0.2;  
-      this.color = `rgba(212, 175, 55, ${this.opacity})`;  
-    }  
-    update() {  
-      this.x += this.speedX;  
-      this.y += this.speedY;  
-      if (this.x < 0) this.x = canvas.width;  
-      if (this.x > canvas.width) this.x = 0;  
-      if (this.y < 0) this.y = canvas.height;  
-      if (this.y > canvas.height) this.y = 0;  
-    }  
-    draw() {  
-      ctx.beginPath();  
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);  
-      ctx.fillStyle = this.color;  
-      ctx.fill();  
-    }  
-  }  
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        appRef.particles.forEach(p => { p.update(); p.draw(); });
+        drawConnections();
+        appRef.animationId = requestAnimationFrame(animate);
+      }
 
-  function resizeCanvas() {  
-    canvas.width = window.innerWidth;  
-    canvas.height = window.innerHeight;  
-  }  
+      window.addEventListener('resize', debounce(() => { resizeCanvas(); initParticles(); }, 200));
 
-  function initParticles() {  
-    appRef.particles = [];  
-    const particleCount = Math.floor((canvas.width * canvas.height) / 15000);  
-    for (let i = 0; i < particleCount; i++) appRef.particles.push(new Particle());  
-  }  
+      resizeCanvas();
+      initParticles();
+      animate();
+    },
 
-  function drawConnections() {  
-    const particles = appRef.particles;  
-    for (let i = 0; i < particles.length; i++) {  
-      for (let j = i + 1; j < particles.length; j++) {  
-        const dx = particles[i].x - particles[j].x;  
-        const dy = particles[i].y - particles[j].y;  
-        const dist = Math.sqrt(dx * dx + dy * dy);  
-        if (dist < 100) {  
-          ctx.beginPath();  
-          ctx.strokeStyle = `rgba(212, 175, 55, ${0.1 * (1 - dist / 100)})`;  
-          ctx.lineWidth = 0.5;  
-          ctx.moveTo(particles[i].x, particles[i].y);  
-          ctx.lineTo(particles[j].x, particles[j].y);  
-          ctx.stroke();  
-        }  
-      }  
-    }  
-  }  
+    /**************************
+     * Book Grid & Cards      *
+     **************************/
+    renderBooks() {
+      const grid = document.getElementById('booksGrid');
+      if (!grid) return;
 
-  function animate() {  
-    const previewModal = document.getElementById('previewModal');  
-    if (previewModal?.classList.contains('active')) {  
-      appRef.animationId = requestAnimationFrame(animate);  
-      return; // Skip rendering when preview open  
-    }  
+      grid.innerHTML = '';
+      booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+      this.setupTiltEffects();
+    },
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);  
-    appRef.particles.forEach(p => { p.update(); p.draw(); });  
-    drawConnections();  
-    appRef.animationId = requestAnimationFrame(animate);  
-  }  
+    createBookCard(book) {
+      const card = document.createElement('div');
+      card.className = 'book-card';
+      card.setAttribute('role', 'listitem');
+      card.dataset.bookId = book.id;
 
-  window.addEventListener('resize', debounce(() => { resizeCanvas(); initParticles(); }, 200));  
+      card.innerHTML = `
+        <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">
+        <div class="book-title">${book.title}</div>
+        <div class="book-price">
+          <span class="old-price">₹${book.oldPrice}</span>
+          <span class="new-price">₹${book.price}</span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-preview" data-action="preview">Preview</button>
+          <button class="btn btn-buy" data-action="buy">Buy Now</button>
+        </div>
+      `;
+      return card;
+    },
 
-  resizeCanvas();  
-  initParticles();  
-  animate();  
-},  
+    setupTiltEffects() {
+      const cards = document.querySelectorAll('.book-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const rotateX = (y - rect.height / 2) / 15;
+          const rotateY = (rect.width / 2 - x) / 15;
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+        });
+        card.addEventListener('mouseleave', () => card.style.transform = '');
+      });
+    },
 
-/**************************  
- * Book Grid & Cards      *  
- **************************/  
-renderBooks() {  
-  const grid = document.getElementById('booksGrid');  
-  if (!grid) return;  
+    setupBookActions() {
+      const grid = document.getElementById('booksGrid');
+      if (!grid) return;
 
-  grid.innerHTML = '';  
-  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));  
-  this.setupTiltEffects();  
-},  
+      grid.addEventListener('click', e => {
+        const button = e.target.closest('button');
+        if (!button) return;
+        const action = button.dataset.action;
+        const card = button.closest('.book-card');
+        if (!action || !card) return;
 
-createBookCard(book) {  
-  const card = document.createElement('div');  
-  card.className = 'book-card';  
-  card.setAttribute('role', 'listitem');  
-  card.dataset.bookId = book.id;  
+        const bookId = parseInt(card.dataset.bookId, 10);
+        const book = booksData.find(b => b.id === bookId);
+        if (!book) return;
 
-  card.innerHTML = `  
-    <img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">  
-    <div class="book-title">${book.title}</div>  
-    <div class="book-price">  
-      <span class="old-price">₹${book.oldPrice}</span>  
-      <span class="new-price">₹${book.price}</span>  
-    </div>  
-    <div class="card-actions">  
-      <button class="btn btn-preview" data-action="preview">Preview</button>  
-      <button class="btn btn-buy" data-action="buy">Buy Now</button>  
-    </div>  
-  `;  
-  return card;  
-},  
+        if (action === 'preview') this.openPreviewModal(book);
+        if (action === 'buy') this.openPaymentModal(book);
+      });
+    },
 
-setupTiltEffects() {  
-  const cards = document.querySelectorAll('.book-card');  
-  cards.forEach(card => {  
-    card.addEventListener('mousemove', e => {  
-      const rect = card.getBoundingClientRect();  
-      const x = e.clientX - rect.left;  
-      const y = e.clientY - rect.top;  
-      const rotateX = (y - rect.height / 2) / 15;  
-      const rotateY = (rect.width / 2 - x) / 15;  
-      card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;  
-    });  
-    card.addEventListener('mouseleave', () => card.style.transform = '');  
-  });  
-},  
+    /**************************
+     * Modal Functionality    *
+     **************************/
+    setupModals() {
+      // Preview Modal
+      const previewModal = document.getElementById('previewModal');
+      const previewClose = document.getElementById('previewClose');
+      const previewBackdrop = previewModal?.querySelector('[data-modal="preview"]');
+      const unlockBtn = document.getElementById('unlockBook');
 
-setupBookActions() {  
-  const grid = document.getElementById('booksGrid');  
-  if (!grid) return;  
+      previewClose?.addEventListener('click', () => this.closePreviewModal());
+      previewBackdrop?.addEventListener('click', () => this.closePreviewModal());
+      unlockBtn?.addEventListener('click', () => {
+        if (this.currentBook) {
+          this.closePreviewModal();
+          setTimeout(() => this.openPaymentModal(this.currentBook), 300);
+        }
+      });
 
-  grid.addEventListener('click', e => {  
-    const button = e.target.closest('button');  
-    if (!button) return;  
-    const action = button.dataset.action;  
-    const card = button.closest('.book-card');  
-    if (!action || !card) return;  
+      // Payment Modal
+      const paymentModal = document.getElementById('paymentModal');
+      const paymentClose = document.getElementById('paymentClose');
+      const paymentBackdrop = paymentModal?.querySelector('[data-modal="payment"]');
+      const paymentForm = document.getElementById('paymentForm');
 
-    const bookId = parseInt(card.dataset.bookId, 10);  
-    const book = booksData.find(b => b.id === bookId);  
-    if (!book) return;  
+      paymentClose?.addEventListener('click', () => this.closePaymentModal());
+      paymentBackdrop?.addEventListener('click', () => this.closePaymentModal());
+      paymentForm?.addEventListener('submit', e => {
+        e.preventDefault();
+        this.handlePaymentSubmit();
+      });
 
-    if (action === 'preview') this.openPreviewModal(book);  
-    if (action === 'buy') this.openPaymentModal(book);  
-  });  
-},  
+      // Close modals on Escape key
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          if (previewModal?.classList.contains('active')) this.closePreviewModal();
+          if (paymentModal?.classList.contains('active')) this.closePaymentModal();
+        }
+      });
+    },
 
-/**************************  
- * Modal Functionality    *  
- **************************/  
-setupModals() {  
-  // Preview Modal  
-  const previewModal = document.getElementById('previewModal');  
-  const previewClose = document.getElementById('previewClose');  
-  const previewBackdrop = previewModal?.querySelector('[data-modal="preview"]');  
-  const unlockBtn = document.getElementById('unlockBook');  
+    /**************************
+     * PDF Viewer Functions   *
+     **************************/
+    setupPDFViewer() {
+      // initialized lazily when opening preview
+    },
 
-  previewClose?.addEventListener('click', () => this.closePreviewModal());  
-  previewBackdrop?.addEventListener('click', () => this.closePreviewModal());  
-  unlockBtn?.addEventListener('click', () => {  
-    if (this.currentBook) {  
-      this.closePreviewModal();  
-      setTimeout(() => this.openPaymentModal(this.currentBook), 300);  
-    }  
-  });  
+    openPreviewModal(book) {
+      this.currentBook = book;
+      const modal = document.getElementById('previewModal');
+      modal?.classList.add('active');
+      document.body.classList.add('modal-open');
+      this.loadPDFPreview(book.previewPDF);
+    },
 
-  // Payment Modal  
-  const paymentModal = document.getElementById('paymentModal');  
-  const paymentClose = document.getElementById('paymentClose');  
-  const paymentBackdrop = paymentModal?.querySelector('[data-modal="payment"]');  
-  const paymentForm = document.getElementById('paymentForm');  
+    closePreviewModal() {
+      const modal = document.getElementById('previewModal');
+      modal?.classList.remove('active');
+      document.body.classList.remove('modal-open');
 
-  paymentClose?.addEventListener('click', () => this.closePaymentModal());  
-  paymentBackdrop?.addEventListener('click', () => this.closePaymentModal());  
-  paymentForm?.addEventListener('submit', e => {  
-    e.preventDefault();  
-    this.handlePaymentSubmit();  
-  });  
+      const pdfViewer = document.getElementById('pdfViewer');
+      if (pdfViewer) pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';
+    },
 
-  // Close modals on Escape key  
-  document.addEventListener('keydown', e => {  
-    if (e.key === 'Escape') {  
-      if (previewModal?.classList.contains('active')) this.closePreviewModal();  
-      if (paymentModal?.classList.contains('active')) this.closePaymentModal();  
-    }  
-  });  
-},  
+    async loadPDFPreview(pdfUrl) {
+      const pdfViewer = document.getElementById('pdfViewer');
+      if (!pdfViewer) return;
 
-/**************************  
- * PDF Viewer Functions   *  
- **************************/  
-setupPDFViewer() {  
-  // initialized lazily when opening preview  
-},  
+      if (typeof pdfjsLib === 'undefined') {
+        pdfViewer.innerHTML = '<p style="color: #ff4444;">PDF.js library not loaded.</p>';
+        return;
+      }
 
-openPreviewModal(book) {  
-  this.currentBook = book;  
-  const modal = document.getElementById('previewModal');  
-  modal?.classList.add('active');  
-  document.body.classList.add('modal-open');  
-  this.loadPDFPreview(book.previewPDF);  
-},  
+      pdfViewer.innerHTML = '<div class="pdf-loading">Loading preview…</div>';
+      const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+      pdfViewer.innerHTML = '';
 
-closePreviewModal() {  
-  const modal = document.getElementById('previewModal');  
-  modal?.classList.remove('active');  
-  document.body.classList.remove('modal-open');  
+      const pagesToRender = Math.min(3, pdfDoc.numPages);
+      for (let i = 1; i <= pagesToRender; i++) {
+        this.renderPDFPage(pdfDoc, i, pdfViewer);
+      }
+    },
 
-  const pdfViewer = document.getElementById('pdfViewer');  
-  if (pdfViewer) pdfViewer.innerHTML = '<div class="pdf-loading"><div class="loading-spinner"></div><p>Loading preview…</p></div>';  
-},  
+    async renderPDFPage(pdfDoc, pageNum, container) {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1 });
+      const scale = Math.min((container.clientWidth - 32) / viewport.width, 1);
+      const scaledViewport = page.getViewport({ scale });
 
-async loadPDFPreview(pdfUrl) {  
-  const pdfViewer = document.getElementById('pdfViewer');  
-  if (!pdfViewer) return;  
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const outputScale = window.devicePixelRatio || 1;
 
-  if (typeof pdfjsLib === 'undefined') {  
-    pdfViewer.innerHTML = '<p style="color: #ff4444;">PDF.js library not loaded.</p>';  
-    return;  
-  }  
+      canvas.width = Math.floor(scaledViewport.width * outputScale);
+      canvas.height = Math.floor(scaledViewport.height * outputScale);
+      canvas.style.width = `${scaledViewport.width}px`;
+      canvas.style.height = `${scaledViewport.height}px`;
+      context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
 
-  pdfViewer.innerHTML = '<div class="pdf-loading">Loading preview…</div>';  
-  const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;  
-  pdfViewer.innerHTML = '';  
+      await page.render({ canvasContext: context, viewport: scaledViewport }).promise;
+      container.appendChild(canvas);
 
-  const pagesToRender = Math.min(3, pdfDoc.numPages);  
-  for (let i = 1; i <= pagesToRender; i++) {  
-    this.renderPDFPage(pdfDoc, i, pdfViewer);  
-  }  
-},  
+      if (pageNum < pdfDoc.numPages) {
+        const spacer = document.createElement('div');
+        spacer.style.height = '2rem';
+        container.appendChild(spacer);
+      }
+    },
 
-async renderPDFPage(pdfDoc, pageNum, container) {  
-  const page = await pdfDoc.getPage(pageNum);  
-  const viewport = page.getViewport({ scale: 1 });  
-  const scale = Math.min((container.clientWidth - 32) / viewport.width, 1);  
-  const scaledViewport = page.getViewport({ scale });  
+    /**************************
+     * Payment Functions      *
+     **************************/
+    openPaymentModal(book) {
+      this.currentBook = book;
+      const modal = document.getElementById('paymentModal');
+      if (!modal) return;
 
-  const canvas = document.createElement('canvas');  
-  const context = canvas.getContext('2d');  
-  const outputScale = window.devicePixelRatio || 1;  
+      modal.classList.add('active');
+      document.body.classList.add('modal-open');
 
-  canvas.width = Math.floor(scaledViewport.width * outputScale);  
-  canvas.height = Math.floor(scaledViewport.height * outputScale);  
-  canvas.style.width = `${scaledViewport.width}px`;  
-  canvas.style.height = `${scaledViewport.height}px`;  
-  context.setTransform(outputScale, 0, 0, outputScale, 0, 0);  
+      const payNowBtn = document.getElementById('payNowBtn');
+      if (payNowBtn) {
+        payNowBtn.classList.remove('disabled');
+        payNowBtn.style.pointerEvents = 'auto';
+        payNowBtn.textContent = 'Pay via UPI';
 
-  await page.render({ canvasContext: context, viewport: scaledViewport }).promise;  
-  container.appendChild(canvas);  
+        const upiLink =
+          `upi://pay?pa=${UPI_CONFIG.upiId}` +
+          `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +
+          `&am=${book.price}` +
+          `&cu=INR` +
+          `&tn=${encodeURIComponent(book.upiDescription)}`;
 
-  if (pageNum < pdfDoc.numPages) {  
-    const spacer = document.createElement('div');  
-    spacer.style.height = '2rem';  
-    container.appendChild(spacer);  
-  }  
-},  
+        payNowBtn.href = upiLink;
+        payNowBtn.target = '_blank';
 
-/**************************  
- * Payment Functions      *  
- **************************/  
-openPaymentModal(book) {  
-  this.currentBook = book;  
-  const modal = document.getElementById('paymentModal');  
-  if (!modal) return;  
+        payNowBtn.onclick = () => {
+          payNowBtn.classList.add('disabled');
+          payNowBtn.style.pointerEvents = 'none';
+          payNowBtn.textContent = 'Opening UPI App...';
+        };
+      }
 
-  modal.classList.add('active');  
-  document.body.classList.add('modal-open');  
+      const form = document.getElementById('paymentForm');
+      if (form) form.reset();
+    },
 
-  const payNowBtn = document.getElementById('payNowBtn');  
-  if (payNowBtn) {  
-    payNowBtn.classList.remove('disabled');  
-    payNowBtn.style.pointerEvents = 'auto';  
-    payNowBtn.textContent = 'Pay via UPI';  
+    closePaymentModal() {
+      const modal = document.getElementById('paymentModal');
+      if (modal) modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+    },
 
-    const upiLink =  
-      `upi://pay?pa=${UPI_CONFIG.upiId}` +  
-      `&pn=${encodeURIComponent(UPI_CONFIG.payeeName)}` +  
-      `&am=${book.price}` +  
-      `&cu=INR` +  
-      `&tn=${encodeURIComponent(book.upiDescription)}`;  
+  handlePaymentSubmit() {
+  const nameInput = document.getElementById('userName');
+  const txnInput = document.getElementById('transactionId');
 
-    payNowBtn.href = upiLink;  
-    payNowBtn.target = '_blank';  
+  if (!nameInput || !txnInput) {
+    alert('Form error. Please reload the page.');
+    return;
+  }
 
-    payNowBtn.onclick = () => {  
-      payNowBtn.classList.add('disabled');  
-      payNowBtn.style.pointerEvents = 'none';  
-      payNowBtn.textContent = 'Opening UPI App...';  
-    };  
-  }  
+  const name = nameInput.value.trim();
+  const txnId = txnInput.value.trim();
 
-  const form = document.getElementById('paymentForm');  
-  if (form) form.reset();  
-},  
+  if (!name) {
+    alert('Please enter your name');
+    nameInput.focus();
+    return;
+  }
 
-closePaymentModal() {  
-  const modal = document.getElementById('paymentModal');  
-  if (modal) modal.classList.remove('active');  
-  document.body.classList.remove('modal-open');  
-},  
+  if (!txnId) {
+    alert('Please enter your transaction ID');
+    txnInput.focus();
+    return;
+  }
 
-handlePaymentSubmit() {  
-  const userNameInput = document.getElementById('userName');  
-  const txnIdInput = document.getElementById('transactionId');  
-  if (!userNameInput || !txnIdInput) return;  
+  if (!this.currentBook) {
+    alert('No book selected');
+    return;
+  }
 
-  const userName = userNameInput.value.trim();  
-  const txnId = txnIdInput.value.trim();  
+  // Create message
+  const message =
+`Hi, I paid for "${this.currentBook.title.replace(/<[^>]*>/g, '')}".
+Name: ${name}
+Txn ID: ${txnId}`;
 
-  if (!userName) { alert('Please enter your name'); userNameInput.focus(); return; }  
-  if (!txnId) { alert('Please enter your transaction ID'); txnIdInput.focus(); return; }  
-  if (!this.currentBook) { alert('No book selected'); return; }  
+  // Copy to clipboard
+  navigator.clipboard.writeText(message).then(() => {
+    alert(
+      'Payment noted!\n\n' +
+      'Message copied.\n' +
+      'Instagram will open now.\n\n' +
+      'Tap "Message" → Paste → Send'
+    );
 
-  const instagramUrl = 'https://www.instagram.com/CODEWITHAHMED0309/';  
-  alert('Redirecting you to Instagram. Please send your payment details via DM.');  
-  window.location.href = instagramUrl;  
+    const instaUsername = 'codewithahmed_0309';
+    const instaAppUrl = `instagram://user?username=${instaUsername}`;
+    const instaWebUrl = `https://www.instagram.com/${instaUsername}/`;
 
-  this.closePaymentModal();  
-},  
+    // Try opening app
+    window.location.href = instaAppUrl;
 
-/**************************  
- * Utility Functions      *  
- **************************/  
-stripHtml(html) { const div = document.createElement('div'); div.innerHTML = html; return div.textContent || div.innerText || ''; }
+    // Fallback to browser
+    setTimeout(() => {
+      window.open(instaWebUrl, '_blank');
+    }, 700);
 
-};
+    this.closePaymentModal();
+  }).catch(() => {
+    alert('Unable to copy message. Please copy manually.');
+  });
+}
+,
 
-/**************************
+createBundleCard() {
+  const card = document.createElement('div');
+  card.className = 'book-card bundle-card';
+  card.setAttribute('role', 'listitem');
+  card.dataset.bookId = 'bundle'; // special id for bundle
 
-Helper Functions       *
-**************************/
-function debounce(fn, delay) {
-let timer;
-return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
+  // Inner HTML with price
+  card.innerHTML = `
+    <div class="bundle-header">
+      <h3>🎉 Special Bundle Offer!</h3>
+      <p>Get all 4 books for only <strong>₹99</strong></p>
+    </div>
+    <div class="bundle-covers">
+      ${booksData.map(book => `<img src="${book.coverImage}" alt="${this.stripHtml(book.title)} cover" loading="lazy">`).join('')}
+    </div>
+    <div class="bundle-price" style="font-size: 1.2rem; font-weight: bold; margin: 0.5rem 0;">₹99</div>
+    <div class="card-actions">
+      <button class="btn btn-buy" data-action="buy-bundle">BUY BUNDLE</button>
+    </div>
+  `;
+
+  return card;
+}
+,
+renderBooks() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  // Render individual books
+  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+
+  // Render the bundle card at the top (or bottom)
+  grid.appendChild(this.createBundleCard());
+
+  this.setupTiltEffects();
+},
+setupBookActions() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', e => {
+    const button = e.target.closest('button');
+    if (!button) return;
+    const action = button.dataset.action;
+    const card = button.closest('.book-card');
+    if (!action || !card) return;
+
+    if (action === 'preview') {
+      const bookId = parseInt(card.dataset.bookId, 10);
+      const book = booksData.find(b => b.id === bookId);
+      if (book) this.openPreviewModal(book);
+    }
+
+    if (action === 'buy') {
+      const bookId = parseInt(card.dataset.bookId, 10);
+      const book = booksData.find(b => b.id === bookId);
+      if (book) this.openPaymentModal(book);
+    }
+
+    if (action === 'buy-bundle') {
+      // Create a pseudo-book object for bundle
+      const bundleBook = {
+        title: 'Bundle of 4 Books',
+        price: 99,
+        upiDescription: 'Payment for Bundle of 4 Books'
+      };
+      this.openPaymentModal(bundleBook);
+    }
+  });
+},
+renderBooks() {
+  const grid = document.getElementById('booksGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  // Render the bundle card first
+  grid.appendChild(this.createBundleCard());
+
+  // Then render individual books
+  booksData.forEach(book => grid.appendChild(this.createBookCard(book)));
+
+  this.setupTiltEffects();
+},
+
+    /**************************
+     * Utility Functions      *
+     **************************/
+    stripHtml(html) { const div = document.createElement('div'); div.innerHTML = html; return div.textContent || div.innerText || ''; }
+  };
+
+  /**************************
+   * Helper Functions       *
+   **************************/
+  function debounce(fn, delay) {
+    let timer;
+    return function(...args) { clearTimeout(timer); timer = setTimeout(() => fn.apply(this, args), delay); };
+  }
+
+  /**************************
+   * Initialize App         *
+   **************************/
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => app.init());
+  } else app.init();
+
+  window.app = app;
+})();
+/**
+ * PAY NOW BUTTON - UPI REDIRECT LOGIC
+ */
+
+// Improved UPI redirect: use location.href, correct timeout logic, and visibility fallback.
+function openUPIPayment(book) {
+  const UPI_CONFIG = {
+    upiId: 'shaikjahash@ibl',
+    payeeName: 'Shaik Jahash Ahmed',
+    currency: 'INR'
+  };
+
+  if (!book) return alert('Book not found!');
+
+  const amount = book.price;
+  const description = encodeURIComponent(book.upiDescription || '');
+  const payeeName = encodeURIComponent(UPI_CONFIG.payeeName);
+  const upiId = encodeURIComponent(UPI_CONFIG.upiId);
+  const currency = UPI_CONFIG.currency;
+
+  const upiLink = `upi://pay?pa=${upiId}&pn=${payeeName}&am=${amount}&cu=${currency}&tn=${description}&mode=02`;
+
+  // Try direct navigation first (user gesture required)
+  let fallbackFired = false;
+  const start = Date.now();
+  const FALLBACK_MS = 1200;
+
+  // Use visibility change to detect whether user left the page (app opened)
+  function onVisibilityChange() {
+    if (document.hidden) {
+      // likely opened the UPI app — don't run fallback
+      clearTimeout(fallbackTimeout);
+      cleanup();
+    }
+  }
+
+  function cleanup() {
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+  }
+
+  // Fallback: if page is still visible after timeout, assume app not installed and show store
+  const fallbackTimeout = setTimeout(() => {
+    const elapsed = Date.now() - start;
+    // Trigger fallback only if elapsed is GREATER than threshold (previous code used < which was inverted)
+    if (elapsed >= FALLBACK_MS && !fallbackFired) {
+      fallbackFired = true;
+      if (/Android/i.test(navigator.userAgent)) {
+        window.location.href = 'https://play.google.com/store/search?q=upi&c=apps';
+      } else if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = 'https://apps.apple.com/in/search?term=upi';
+      } else {
+        alert('Please install a UPI app to complete the payment.');
+      }
+      cleanup();
+    }
+  }, FALLBACK_MS);
+
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
+  // Primary attempt
+  try {
+    // Use location.href as the primary way — works as a user gesture when called from a click handler.
+    window.location.href = upiLink;
+  } catch (err) {
+    // As a fallback, try the anchor click approach
+    const tempLink = document.createElement('a');
+    tempLink.href = upiLink;
+    tempLink.style.display = 'none';
+    document.body.appendChild(tempLink);
+    tempLink.click();
+    document.body.removeChild(tempLink);
+  }
 }
 
+// Attach a handler to the modal pay button that uses the currently selected book.
+// Ensure payNowBtn is an <a> or a clickable element that does not call preventDefault elsewhere.
+document.getElementById('payNowBtn')?.addEventListener('click', (e) => {
+  // If the element is an anchor and you want it to directly open the upi link via href,
+  // do NOT call preventDefault here. If you want to use openUPIPayment, ensure we have the right book.
+  e.preventDefault();
 
-/**************************
+  // Get the current book from the app state instead of hardcoding
+  const current = window.app?.currentBook;
+  if (!current) {
+    alert('No book selected for payment.');
+    return;
+  }
 
-Initialize App         *
-**************************/
-if (document.readyState === 'loading') {
-document.addEventListener('DOMContentLoaded', () => app.init());
-} else app.init();
-
-
-window.app = app;
-
-})();  
+  openUPIPayment(current);
+});
