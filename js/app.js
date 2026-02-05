@@ -406,4 +406,4 @@ document.addEventListener('DOMContentLoaded', () => app.init());
 
 window.app = app;
 
-})();   the App is not redirecting to the insta DM although I mention it check this code once and tell the issue
+})();  
