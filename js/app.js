@@ -1,9 +1,3 @@
- /**
-
-IQRA E-STORE - Main Application (Refactored for Readability)
-
-All features preserved: books rendering, PDF preview, UPI payment, particle canvas, copy buttons, navbar, sliders, counters, newsletter
-*/
 
 
 (function() {
