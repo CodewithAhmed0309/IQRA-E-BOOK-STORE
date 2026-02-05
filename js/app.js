@@ -1,297 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IQRA E-STORE – Premium E-Book Library</title>
+// js/app.js
+// Renders book cards into an element with id="booksContainer". Update the `books` array or fetch from your data source as needed.
+const books = [
+  { title: "Book One", author: "Author A", img: "covers/book1.jpg", price: "₹199", pdf: "pdfs/book1.pdf" },
+  { title: "Book Two", author: "Author B", img: "covers/book2.jpg", price: "₹249", pdf: "pdfs/book2.pdf" },
+  { title: "Book Three", author: "Author C", img: "covers/book3.jpg", price: "₹299", pdf: "pdfs/book3.pdf" }
+];
 
-
-<link rel="stylesheet" href="styles/main.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-</head>
-
-<body>
-
-<div class="background-container">
-  <div class="gradient-orb orb-1"></div>
-  <div class="gradient-orb orb-2"></div>
-  <div class="gradient-orb orb-3"></div>
-  <canvas id="particleCanvas"></canvas>
-</div>
-
-<nav class="main-nav" role="navigation" aria-label="Main navigation">
-  <div class="nav-container">
-    <div class="nav-brand">
-      <a href="#home" class="brand-link">
-        <span class="brand-icon"></span>
-        <span class="brand-text">IQRA E-STORE</span>
-      </a>
-    </div>
-    
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-    </button>
-    
-    <ul class="nav-menu" id="navMenu">
-      <li class="nav-item"><a href="#home" class="nav-link active">Home</a></li>
-      <li class="nav-item"><a href="#about" class="nav-link">About</a></li>
-      <li class="nav-item nav-item-dropdown">
-        <a href="#services" class="nav-link">Services <span class="dropdown-arrow">▼</span></a>
-        <ul class="dropdown-menu">
-          <li><a href="#services" class="dropdown-link">E-Book Library</a></li>
-          <li><a href="#services" class="dropdown-link">Premium Content</a></li>
-          <li><a href="#services" class="dropdown-link">Digital Collections</a></li>
-        </ul>
-      </li>
-      <li class="nav-item"><a href="book.html" class="nav-link">Featured E-Books</a></li>
-      <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
-    </ul>
-  </div>
-</nav>
-
-<section class="hero-section" id="home">
-  <div class="hero-container">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span>✨ Premium Digital Library</span>
-      </div>
-      <h1 class="hero-title">
-        <span class="hero-title-line">Discover</span>
-        <span class="hero-title-line gradient-text">Premium E-Books</span>
-        <span class="hero-title-line">at Your Fingertips</span>
-      </h1>
-      <p class="hero-subtitle">
-        Explore our curated collection of premium digital books. Instant access, 
-        lifetime ownership, and seamless reading experience.
-      </p>
-      <div class="hero-cta">
-        <a href="book.html" class="btn btn-hero btn-primary btn-explore">Explore Books</a>
-        <a href="#about" class="btn btn-hero btn-secondary">Learn More</a>
+function createBookCard(book) {
+  const card = document.createElement('article');
+  card.className = 'book-card';
+  card.innerHTML = `
+    <img src="${book.img}" alt="${book.title}" class="book-cover" onerror="this.src='covers/default-cover.jpg'">
+    <div class="book-info">
+      <h3 class="book-title">${book.title}</h3>
+      <p class="book-author">${book.author}</p>
+      <div class="book-meta">
+        <span class="book-price">${book.price}</span>
+        <button class="btn-preview" data-pdf="${book.pdf}" type="button">Preview</button>
       </div>
     </div>
-    <div class="hero-visual">
-      <div class="hero-image-wrapper">
-        <div class="floating-card card-1"><div class="card-shine"></div></div>
-        <div class="floating-card card-2"><div class="card-shine"></div></div>
-        <div class="floating-card card-3"><div class="card-shine"></div></div>
-      </div>
-    </div>
-  </div>
-  <div class="hero-scroll-indicator">
-    <span class="scroll-text">Scroll to explore</span>
-    <div class="scroll-arrow"></div>
-  </div>
-</section>
+  `;
+  return card;
+}
 
-<section class="hero-explore">
-  <div class="explore-container">
-    <a href="book.html" class="btn btn-primary btn-explore-page" aria-label="Browse our featured e-books collection">
-      <span class="btn-text">Explore Books</span>
-      <span class="btn-icon"></span>
-    </a>
-    <p class="explore-subtitle">Discover our premium collection of digital books</p>
-  </div>
-</section>
+function renderBooks(list) {
+  const container = document.getElementById('booksContainer');
+  if (!container) {
+    console.warn('booksContainer not found. Add <div id="booksContainer"></div> to the HTML where you want the book cards to appear.');
+    return;
+  }
+  container.innerHTML = ''; // clear existing
+  list.forEach(b => container.appendChild(createBookCard(b)));
+}
 
-<main class="main-content">
-  <section class="about-section" id="about">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-badge">About Us</span>
-        <h2 class="section-title">Your Gateway to <span class="gradient-text">Premium Knowledge</span></h2>
-        <p class="section-description">
-          We are dedicated to providing access to premium digital content, 
-          making knowledge accessible to everyone, everywhere.
-        </p>
-      </div>
-      <div class="about-content">
-        <div class="about-feature">
-          <div class="feature-icon"></div>
-          <h3>Instant Access</h3>
-          <p>Get immediate access to your purchased e-books</p>
-        </div>
-        <div class="about-feature">
-          <div class="feature-icon"></div>
-          <h3>Secure Payment</h3>
-          <p>Safe and secure payment processing</p>
-        </div>
-        <div class="about-feature">
-          <div class="feature-icon"></div>
-          <h3>Multi-Device</h3>
-          <p>Read on any device, anytime, anywhere</p>
-        </div>
-      </div>
-    </div>
-  </section>
+function openPreview(pdfPath) {
+  if (!pdfPath) return;
+  // If your UI has a preview modal (#previewModal) and a viewer inside (#pdfViewer), you can integrate pdf.js here.
+  // For a simple fallback, open the PDF in a new tab.
+  window.open(pdfPath, '_blank');
+}
 
-  <section class="services-section" id="services">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-badge">Our Services</span>
-        <h2 class="section-title">What We <span class="gradient-text">Offer</span></h2>
-      </div>
-      <div class="services-grid">
-        <div class="service-card">
-          <div class="service-icon"></div>
-          <h3>E-Book Library</h3>
-          <p>Extensive collection of premium e-books across various genres</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"></div>
-          <h3>Premium Content</h3>
-          <p>Exclusive access to high-quality digital publications</p>
-        </div>
-        <div class="service-card">
-          <div class="service-icon"></div>
-          <h3>Curated Collections</h3>
-          <p>Handpicked books organized by themes and interests</p>
-        </div>
-      </div>
-    </div>
-  </section>
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-preview');
+  if (!btn) return;
+  const pdf = btn.getAttribute('data-pdf');
+  openPreview(pdf);
+});
 
-  <section class="testimonials-section">
-    <div class="section-container">
-      <div class="section-header">
-        <span class="section-badge">Testimonials</span>
-        <h2 class="section-title">What Our <span class="gradient-text">Readers Say</span></h2>
-      </div>
-      <div class="testimonials-slider">
-        <div class="testimonial-card active">
-          <div class="testimonial-content">
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-            <p class="testimonial-text">"Amazing collection of books! The quality is outstanding and the purchase process was seamless."</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">A</div>
-              <div class="author-info"><h4>AZHAR ZAIN</h4><span>Regular Reader</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-content">
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-            <p class="testimonial-text">"Best e-book store I've used. Instant delivery and great customer support!"</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">S</div>
-              <div class="author-info"><h4>SUHAIL</h4><span>Book Enthusiast</span></div>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <div class="testimonial-content">
-            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-            <p class="testimonial-text">"Premium quality content at affordable prices. Highly recommended!"</p>
-            <div class="testimonial-author">
-              <div class="author-avatar">M</div>
-              <div class="author-info"><h4>venkat ram</h4><span>Digital Reader</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonials-controls">
-        <button class="testimonial-btn prev" aria-label="Previous testimonial">‹</button>
-        <div class="testimonial-dots">
-          <span class="dot active" data-slide="0"></span>
-          <span class="dot" data-slide="1"></span>
-          <span class="dot" data-slide="2"></span>
-        </div>
-        <button class="testimonial-btn next" aria-label="Next testimonial">›</button>
-      </div>
-    </div>
-  </section>
-</main>
-
-<div class="preview-modal" id="previewModal" role="dialog" aria-labelledby="preview-title" aria-modal="true">
-  <div class="modal-backdrop" data-modal="preview"></div>
-  <div class="preview-container">
-    <button class="modal-close" id="previewClose" aria-label="Close preview">✕</button>
-    <div class="preview-header">
-      <h2 id="preview-title">Preview</h2>
-      <button class="btn btn-unlock" id="unlockBook" aria-label="Unlock full book">
-        <span></span> UNLOCK BOOK
-      </button>
-    </div>
-    <div class="pdf-viewer-container">
-      <div class="pdf-viewer" id="pdfViewer" role="document" aria-label="PDF preview">
-        <div class="pdf-loading">
-          <div class="loading-spinner"></div>
-          <p>Loading preview…</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="payment-modal" id="paymentModal">
-  <div class="payment-container" style="background: #121212; width: 95%; max-width: 450px; padding: 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; max-height: 90vh; overflow-y: auto;">
-    
-    <button onclick="document.getElementById('paymentModal').style.display='none'" style="position: absolute; right: 15px; top: 15px; background: none; border: none; color: #666; font-size: 24px; cursor: pointer;">✕</button>
-    
-    <h2 style="color: white; text-align: center; font-family: 'Playfair Display'; margin-bottom: 20px;">Unlock Premium Access</h2>
-
-    
-
-    <div style="text-align: center; margin-bottom: 20px;">
-      <img src="QR.jpg" alt="Scan to Pay" style="width: 140px; border-radius: 10px; border: 4px solid white; margin-bottom: 10px;">
-      <p style="color: #aaa; font-size: 0.9rem;">UPI: <span style="color: white;">shaikjahash@ibl</span></p>
-    </div>
-
-    <form id="paymentForm">
-      <input type="text" placeholder="Enter Your Full Name" required style="width: 100%; padding: 12px; margin-bottom: 10px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;">
-      <input type="text" placeholder="Paste Transaction ID Here" required style="width: 100%; padding: 12px; margin-bottom: 15px; background: #222; border: 1px solid #333; color: white; border-radius: 8px;">
-      <a id="instagramRedirect"
-   class="btn btn-instagram"
-   target="_blank"
-   rel="noopener">
-   Open Instagram DM
-</a>
-
-      <button type="submit"  id="sendBtn"style="width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        SEND 
-      </button>
-    </form>
-
-  </div>
-</div>
-
-<footer class="main-footer" id="contact" role="contentinfo">
-  <div class="footer-container">
-    <div class="footer-content">
-      <div class="footer-column footer-brand">
-        <div class="footer-logo"> IQRA E-STORE</div>
-        <p>Your premium destination for digital books.</p>
-        <div class="social-links">
-          <a href="#" class="social-link">FB</a>
-          <a href="#" class="social-link">TW</a>
-          <a href="https://wa.me/8639917686" class="social-link">WA</a>
-        </div>
-      </div>
-      <div class="footer-column">
-        <h3 class="footer-title">Quick Links</h3>
-        <ul class="footer-links">
-          <li><a href="#home">Home</a></li>
-          <li><a href="book.html">E-Books</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h3 class="footer-title">Contact</h3>
-        <p>shaikjahashahmed9@gmail.com</p>
-        <p>+91 8639917686</p>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>&copy; 2026 IQRA E-STORE. Website by Shaik Jahash Ahmed</p>
-    </div>
-  </div>
-</footer>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-<script src="js/app.js"></script>
-
-</body>
-</html>
+document.addEventListener('DOMContentLoaded', () => {
+  // Replace or extend: you can fetch a JSON file or API here instead of using the static `books` array.
+  renderBooks(books);
+};
