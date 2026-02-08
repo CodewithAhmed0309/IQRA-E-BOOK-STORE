@@ -372,29 +372,32 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 <!-- Application Scripts -->
 <script src="js/app.js"></script>
-    <script>
-document.getElementById("payNow").onclick = async () => {
-  const res = await fetch("https://payment-backend.shaikjahashahmed9.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      amount: 50000,        // ₹500 → 50000 paise
-      currency: "INR",
-      receipt: "order_rcptid_11"
-    })
-  });
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const payBtn = document.getElementById("payNow");
 
-  const order = await res.json();
+  payBtn.onclick = async () => {
+    console.log("Pay Now clicked!");
 
-  if (order.id) {
+    const res = await fetch("https://payment-backend.shaikjahashahmed9.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: 50000, currency: "INR", receipt: "order_rcptid_11" })
+    });
+
+    const order = await res.json();
+
+    if (!order.id) return alert("Payment order creation failed!");
+
     const options = {
-      key: "rzp_test_ABCxyz...", // Replace with your Razorpay Key ID
+      key: "YOUR_RAZORPAY_KEY_HERE",
       amount: order.amount,
       currency: order.currency,
       order_id: order.id,
       name: "IQRA E-STORE",
       description: "Premium E-Book Access",
-      handler: function (response) {
+      handler: function(response) {
         alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
       },
       prefill: {
@@ -406,16 +409,16 @@ document.getElementById("payNow").onclick = async () => {
 
     const rzp = new Razorpay(options);
     rzp.open();
-  } else {
-    alert("Payment order creation failed!");
-  }
-};
+  };
+});
 </script>
+
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 
 </body>
 </html>
+
 
 
