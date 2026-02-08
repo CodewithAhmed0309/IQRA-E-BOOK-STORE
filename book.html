@@ -200,6 +200,10 @@
             </svg>
           </button>
         </div>
+<button id="payNow" 
+        style="width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 28px; font-weight: 700; cursor: pointer; margin-top: 10px;">
+  Pay Now
+</button>
 
         <div>
           Use the UPI ID or UPI Number to make the payment manually. After payment, enter your Name and Transaction ID below.
@@ -368,7 +372,50 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
 
 <!-- Application Scripts -->
 <script src="js/app.js"></script>
+    <script>
+document.getElementById("payNow").onclick = async () => {
+  const res = await fetch("https://payment-backend.shaikjahashahmed9.workers.dev", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      amount: 50000,        // ₹500 → 50000 paise
+      currency: "INR",
+      receipt: "order_rcptid_11"
+    })
+  });
+
+  const order = await res.json();
+
+  if (order.id) {
+    const options = {
+      key: "rzp_test_ABCxyz...", // Replace with your Razorpay Key ID
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.id,
+      name: "IQRA E-STORE",
+      description: "Premium E-Book Access",
+      handler: function (response) {
+        alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+      },
+      prefill: {
+        name: document.getElementById("userName").value || "",
+        email: "",
+      },
+      theme: { color: "#25d366" }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  } else {
+    alert("Payment order creation failed!");
+  }
+};
+</script>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 
 </body>
 </html>
+
 
