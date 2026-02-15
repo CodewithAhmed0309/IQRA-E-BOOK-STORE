@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "payment-backend",
+  "name": "iqra-e-book-store",
   "main": "src/index.js",
   "compatibility_date": "2026-02-05",
   "observability": { "enabled": true },
