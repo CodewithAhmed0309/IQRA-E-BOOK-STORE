@@ -10,7 +10,7 @@
    * E-Book Data & Config *
    ***********************/
   const booksData = [
-    { id: 5, title: '<strong>COUSIN LOVE</strong>', coverImage: 'CL.png', previewPDF: 'COUSIN LOVE PREVIEW.pdf', oldPrice: 750, price: FREE, upiDescription: 'FREE ' },
+    { id: 5, title: '<strong>COUSIN LOVE</strong>', coverImage: 'CL.png', previewPDF: 'COUSIN LOVE PREVIEW.pdf', oldPrice: 750, price: 0, upiDescription: 'FREE ' },
     { id: 4, title: '<strong>Makaan No. 27 Shadows of the Forgotten</strong>', coverImage: 'F.png', previewPDF: 'PD.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Makaan No. 27' },
     { id: 2, title: '<strong>Adhura Ishq</strong>', coverImage: 'ai.png', previewPDF: 'Part 1.pdf', oldPrice: 100, price: 29, upiDescription: 'Payment for Adhura Ishq' },
     { id: 1, title: '<strong>Khwaab Ki Tabeer</strong>', coverImage: 'DP.png', previewPDF: 'demo.pdf', oldPrice: 150, price: 29, upiDescription: 'Payment for Khwaab Ki Tabeer' },
