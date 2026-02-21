@@ -412,49 +412,6 @@ document.getElementById("payNow").onclick = async () => {
   }
 };
 </script>
-<script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwonswZpE3S5ETkybzfImGejPZA4x3gTAqdVljS4Bd_d_xfVhJUdlNxCw2177BQBCIcWA/exec";
-
-let selectedBookPDF = "";
-let selectedBookTitle = "";
-
-function openDownloadModal(pdf, title) {
-  selectedBookPDF = pdf;
-  selectedBookTitle = title;
-  document.getElementById("downloadModal").style.display = "flex";
-}
-
-document.getElementById("closeModal").onclick = function() {
-  document.getElementById("downloadModal").style.display = "none";
-};
-
-document.getElementById("submitDownload").onclick = function() {
-  const name = document.getElementById("userName").value;
-  const email = document.getElementById("userEmail").value;
-
-  if (!name || !email) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  fetch(WEB_APP_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      name: name,
-      email: email,
-      book: selectedBookTitle
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    document.getElementById("downloadModal").style.display = "none";
-    window.open(selectedBookPDF, "_blank");
-  })
-  .catch(err => {
-    alert("Error submitting data");
-  });
-};
-</script>
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
