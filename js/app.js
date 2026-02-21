@@ -1,6 +1,5 @@
 (function () {
   'use strict';
-
   const booksData = [
     { id: 5, title: 'COUSIN LOVE', coverImage: 'CL.png', downloadPDF: 'CL2.pdf', previewPDF: 'CL2.pdf' },
     { id: 4, title: 'Makaan No. 27 Shadows of the Forgotten', coverImage: 'F.png', downloadPDF: 'PD2.pdf', previewPDF: 'PD2.pdf' },
