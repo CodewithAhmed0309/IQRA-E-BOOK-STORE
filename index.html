@@ -13,15 +13,6 @@
 </head>
 
 <body>
-<button id="test">Test Backend</button>
-
-<script>
-document.getElementById("test").onclick = async () => {
-  const res = await fetch("https://payment-backend.shaikjahashahmed9.workers.dev");
-  const data = await res.json();
-  alert(data.message);
-};
-</script>
 
 <div class="background-container">
   <div class="gradient-orb orb-1"></div>
@@ -304,4 +295,3 @@ document.getElementById("test").onclick = async () => {
 
 </body>
 </html>
-
