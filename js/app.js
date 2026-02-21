@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+
   const booksData = [
     { id: 5, title: 'COUSIN LOVE', coverImage: 'CL.png', downloadPDF: 'CL2.pdf', previewPDF: 'CL2.pdf' },
     { id: 4, title: 'Makaan No. 27 Shadows of the Forgotten', coverImage: 'F.png', downloadPDF: 'PD2.pdf', previewPDF: 'PD2.pdf' },
@@ -10,13 +11,17 @@
 
   function renderBooks() {
     const grid = document.getElementById('booksGrid');
-    if (!grid) return console.error("booksGrid not found in HTML");
+    if (!grid) {
+      console.error("booksGrid not found in HTML");
+      return;
+    }
 
     grid.innerHTML = '';
 
     booksData.forEach(book => {
       const card = document.createElement('div');
       card.className = 'book-card';
+
       card.innerHTML = `
         <img src="${book.coverImage}" alt="${book.title}" style="width:100%; border-radius:8px;">
         <h3>${book.title}</h3>
@@ -29,16 +34,20 @@
       grid.appendChild(card);
 
       // Attach event listeners
-      card.querySelector('.btn-preview').addEventListener('click', () => openPreview(book.title, book.previewPDF));
-      card.querySelector('.btn-download').addEventListener('click', () => openDownloadModal(book.downloadPDF, book.title));
+      const previewBtn = card.querySelector('.btn-preview');
+      const downloadBtn = card.querySelector('.btn-download');
+
+      previewBtn.addEventListener('click', () => openPreview(book.title, book.previewPDF));
+      downloadBtn.addEventListener('click', () => openDownloadModal(book.downloadPDF, book.title));
     });
   }
 
   document.addEventListener('DOMContentLoaded', renderBooks);
+
 })();
 
 // ----------------------
-// Preview Modal
+// Preview Modal Functions
 // ----------------------
 function openPreview(title, pdfFile) {
   const modal = document.getElementById("previewModal");
@@ -46,7 +55,15 @@ function openPreview(title, pdfFile) {
   const titleElement = document.getElementById("preview-title");
 
   titleElement.textContent = title;
-  viewer.innerHTML = `<iframe src="${pdfFile}" width="100%" height="600px" style="border:none;"></iframe>`;
+
+  viewer.innerHTML = `
+    <iframe 
+      src="${pdfFile}" 
+      width="100%" 
+      height="600px"
+      style="border:none;">
+    </iframe>
+  `;
 
   modal.classList.add("active");
   document.body.classList.add("modal-open");
@@ -55,41 +72,56 @@ function openPreview(title, pdfFile) {
 function closePreview() {
   const modal = document.getElementById("previewModal");
   const viewer = document.getElementById("pdfViewer");
+
   viewer.innerHTML = "";
   modal.classList.remove("active");
   document.body.classList.remove("modal-open");
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("previewClose")?.addEventListener("click", closePreview);
-  document.querySelector(".modal-backdrop")?.addEventListener("click", closePreview);
+document.addEventListener("DOMContentLoaded", function () {
+  const closeBtn = document.getElementById("previewClose");
+  const backdrop = document.querySelector(".modal-backdrop");
+
+  if (closeBtn) closeBtn.addEventListener("click", closePreview);
+  if (backdrop) backdrop.addEventListener("click", closePreview);
 });
 
 // ----------------------
-// Download Modal Logic
+// Download with Name & Email
 // ----------------------
 function openDownloadModal(pdfFile, bookTitle) {
+   // Ask for Name
   const userName = prompt(`Enter your full name to download "${bookTitle}":`);
-  if (!userName) return alert("Name is required to download the book!");
+  if (!userName) {
+    alert("Name is required to download the book!");
+    return;
+  }
 
+  // Ask for Email
   const userEmail = prompt("Enter your email address:");
-  if (!userEmail) return alert("Email is required to download the book!");
+  if (!userEmail) {
+    alert("Email is required to download the book!");
+    return;
+  }
 
-  fetch("https://script.google.com/macros/s/AKfycbyQErt8Ck78PHSIgRGft5JwCy64HBVlL7VESlXHFOkfn3toGwcr3WSuYIy9UoXZ1QQLng/exec", {
+  // Send data to Google Sheet via your Apps Script Web App
+  fetch("https://script.google.com/macros/s/AKfycbyQErt8Ck78PHSIgRGft5JwCy64HBVlL7VESlXHFOkfn3toGwcr3WSuYIy9UoXZ1QQLng/exec", { // <-- Replace with your Google Apps Script URL
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       name: userName,
       email: userEmail,
       book: bookTitle,
       date: new Date().toISOString()
-    })
+    }),
+    headers: {
+      "Content-Type": "application/json"
+    }
   })
   .then(res => res.json())
   .then(data => {
     console.log("User data saved:", data);
 
-    // Trigger PDF download
+    // Trigger the PDF download
     const link = document.createElement("a");
     link.href = pdfFile;
     link.download = pdfFile;
