@@ -11,7 +11,6 @@
 
   function renderBooks() {
     const grid = document.getElementById('booksGrid');
-
     if (!grid) {
       console.error("booksGrid not found in HTML");
       return;
@@ -26,29 +25,30 @@
       card.innerHTML = `
         <img src="${book.coverImage}" alt="${book.title}" style="width:100%; border-radius:8px;">
         <h3>${book.title}</h3>
-
-       <div class="book-actions">
-  <button class="btn btn-preview" 
-    onclick="openPreview('${book.title}', '${book.previewPDF}')">
-    Preview
-  </button>
-
- <button class="btn btn-download"
-  onclick="openDownloadModal('${book.downloadPDF}', '${book.title}')">
-  Download
-</button>
-
-</div>
+        <div class="book-actions">
+          <button class="btn btn-preview">Preview</button>
+          <button class="btn btn-download">Download</button>
+        </div>
       `;
 
       grid.appendChild(card);
+
+      // Attach event listeners
+      const previewBtn = card.querySelector('.btn-preview');
+      const downloadBtn = card.querySelector('.btn-download');
+
+      previewBtn.addEventListener('click', () => openPreview(book.title, book.previewPDF));
+      downloadBtn.addEventListener('click', () => openDownloadModal(book.downloadPDF, book.title));
     });
   }
 
   document.addEventListener('DOMContentLoaded', renderBooks);
+
 })();
 
-
+// ----------------------
+// Preview Modal Functions
+// ----------------------
 function openPreview(title, pdfFile) {
   const modal = document.getElementById("previewModal");
   const viewer = document.getElementById("pdfViewer");
@@ -77,17 +77,60 @@ function closePreview() {
   modal.classList.remove("active");
   document.body.classList.remove("modal-open");
 }
-document.addEventListener("DOMContentLoaded", function () {
 
+document.addEventListener("DOMContentLoaded", function () {
   const closeBtn = document.getElementById("previewClose");
   const backdrop = document.querySelector(".modal-backdrop");
 
-  if (closeBtn) {
-    closeBtn.addEventListener("click", closePreview);
-  }
-
-  if (backdrop) {
-    backdrop.addEventListener("click", closePreview);
-  }
-
+  if (closeBtn) closeBtn.addEventListener("click", closePreview);
+  if (backdrop) backdrop.addEventListener("click", closePreview);
 });
+
+// ----------------------
+// Download with Name & Email
+// ----------------------
+function openDownloadModal(pdfFile, bookTitle) {
+   // Ask for Name
+  const userName = prompt(`Enter your full name to download "${bookTitle}":`);
+  if (!userName) {
+    alert("Name is required to download the book!");
+    return;
+  }
+
+  // Ask for Email
+  const userEmail = prompt("Enter your email address:");
+  if (!userEmail) {
+    alert("Email is required to download the book!");
+    return;
+  }
+
+  // Send data to Google Sheet via your Apps Script Web App
+  fetch("https://script.google.com/macros/s/AKfycbwonswZpE3S5ETkybzfImGejPZA4x3gTAqdVljS4Bd_d_xfVhJUdlNxCw2177BQBCIcWA/exec", { // <-- Replace with your Google Apps Script URL
+    method: "POST",
+    body: JSON.stringify({
+      name: userName,
+      email: userEmail,
+      book: bookTitle,
+      date: new Date().toISOString()
+    }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("User data saved:", data);
+
+    // Trigger the PDF download
+    const link = document.createElement("a");
+    link.href = pdfFile;
+    link.download = pdfFile;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  })
+  .catch(err => {
+    console.error("Error saving user data:", err);
+    alert("Failed to save your data. Please try again.");
+  });
+}
